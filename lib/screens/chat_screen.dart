@@ -26,7 +26,8 @@ class ChatScreen extends StatefulWidget {
 
 class _AuroraBackdrop extends StatefulWidget {
   final ValueListenable<Offset> touch;
-  const _AuroraBackdrop({required this.touch});
+  final ValueListenable<double> energy;
+  const _AuroraBackdrop({required this.touch, required this.energy});
 
   @override
   State<_AuroraBackdrop> createState() => _AuroraBackdropState();
@@ -47,10 +48,10 @@ class _AuroraBackdropState extends State<_AuroraBackdrop>
   @override
   Widget build(BuildContext context) => RepaintBoundary(
         child: AnimatedBuilder(
-          animation: Listenable.merge([_motion, widget.touch]),
+          animation: Listenable.merge([_motion, widget.touch, widget.energy]),
           builder: (context, _) => CustomPaint(
             size: Size.infinite,
-            painter: _AuroraPainter(_motion.value, widget.touch.value),
+            painter: _AuroraPainter(_motion.value, widget.touch.value, widget.energy.value),
           ),
         ),
       );
@@ -59,7 +60,8 @@ class _AuroraBackdropState extends State<_AuroraBackdrop>
 class _AuroraPainter extends CustomPainter {
   final double phase;
   final Offset touch;
-  const _AuroraPainter(this.phase, this.touch);
+  final double energy;
+  const _AuroraPainter(this.phase, this.touch, this.energy);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -76,15 +78,20 @@ class _AuroraPainter extends CustomPainter {
         ).createShader(bounds),
     );
     final wave = math.sin(phase * math.pi * 2);
+    final energyLift = energy.clamp(0.0, 1.0).toDouble();
     final center = Offset(size.width * (0.5 + (touch.dx - 0.5) * 0.12),
         size.height * (0.48 + (touch.dy - 0.5) * 0.08));
     final colors = const [Color(0xFF5421A8), Color(0xFFB11A83), Color(0xFFFF654F)];
     for (var i = 0; i < 3; i++) {
       final c = Offset(center.dx + math.sin(wave + i * 2.1) * size.width * 0.16,
           size.height * (0.18 + i * 0.34) + math.cos(wave + i) * 24);
-      final rect = Rect.fromCenter(center: c, width: size.width * 1.15, height: size.height * 0.62);
+      final rect = Rect.fromCenter(
+        center: c,
+        width: size.width * (1.15 + energyLift * 0.14),
+        height: size.height * (0.62 + energyLift * 0.08),
+      );
       final paint = Paint()
-        ..shader = RadialGradient(colors: [colors[i].withOpacity(0.18), colors[i].withOpacity(0.045), Colors.transparent], stops: const [0, 0.48, 1])
+        ..shader = RadialGradient(colors: [colors[i].withOpacity(0.18 + energyLift * 0.08), colors[i].withOpacity(0.045), Colors.transparent], stops: const [0, 0.48, 1])
             .createShader(rect)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 48);
       canvas.drawOval(rect, paint);
@@ -93,13 +100,13 @@ class _AuroraPainter extends CustomPainter {
     for (var i = 0; i < 38; i++) {
       final x = ((i * 73 + 19) % 997) / 997 * size.width;
       final y = ((i * 137 + 41) % 991) / 991 * size.height;
-      canvas.drawCircle(Offset(x + (touch.dx - .5) * 9, y + (touch.dy - .5) * 9), i % 7 == 0 ? 1.1 : .55, starPaint);
+      canvas.drawCircle(Offset(x + (touch.dx - .5) * 9, y + (touch.dy - .5) * 9), (i % 7 == 0 ? 1.1 : .55) + energyLift * .25, starPaint);
     }
   }
 
   @override
   bool shouldRepaint(covariant _AuroraPainter oldDelegate) =>
-      oldDelegate.phase != phase || oldDelegate.touch != touch;
+      oldDelegate.phase != phase || oldDelegate.touch != touch || oldDelegate.energy != energy;
 }
 
 class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateMixin {
@@ -118,6 +125,7 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
   double _scrollTilt = 0.0;
   double _lastScrollPixels = 0.0;
   final ValueNotifier<Offset> _ambientTouch = ValueNotifier(const Offset(0.5, 0.5));
+  final ValueNotifier<double> _scrollEnergy = ValueNotifier(0.0);
 
   @override
   void initState() {
@@ -147,6 +155,7 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
             _scrollEndTimer?.cancel();
             _scrollEndTimer = Timer(const Duration(milliseconds: 900), () {
               if (mounted) {
+                _scrollEnergy.value = 0.0;
                 setState(() {
                   _isScrolling = false;
                   _scrollTilt = 0.0;
@@ -163,6 +172,7 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
   void dispose() {
     _scrollEndTimer?.cancel();
     _ambientTouch.dispose();
+    _scrollEnergy.dispose();
     super.dispose();
   }
 
@@ -378,7 +388,27 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
         },
         child: Stack(
         children: [
-          Positioned.fill(child: _AuroraBackdrop(touch: _ambientTouch)),
+          Positioned.fill(child: _AuroraBackdrop(touch: _ambientTouch, energy: _scrollEnergy)),
+
+          // The chamber's continuous time spine stays behind the virtualized list.
+          Positioned(
+            top: 0,
+            bottom: 0,
+            left: MediaQuery.sizeOf(context).width / 2 - .5,
+            child: IgnorePointer(
+              child: Container(
+                width: 1,
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Color(0x003A2860), Color(0x586F60A0), Color(0xB7E936A8), Color(0x586F60A0), Color(0x003A2860)],
+                    stops: [0, .12, .5, .88, 1],
+                  ),
+                ),
+              ),
+            ),
+          ),
 
           // Main 120Hz Virtualized List with Liquid Velocity Tilt
           if (_isLoading)
@@ -402,6 +432,7 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
                   final delta = notification.metrics.pixels - _lastScrollPixels;
                   _lastScrollPixels = notification.metrics.pixels;
                   final tilt = (delta / 1800).clamp(-0.012, 0.012).toDouble();
+                  _scrollEnergy.value = (delta.abs() / 38).clamp(0.0, 1.0).toDouble();
                   if ((tilt - _scrollTilt).abs() > 0.001) {
                     setState(() => _scrollTilt = tilt);
                   }
@@ -520,18 +551,12 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
       backgroundColor: const Color(0xE6050509),
       elevation: 0,
       scrolledUnderElevation: 0,
-      titleSpacing: 20,
-      title: Row(
-        children: [
-          _buildPortalMark(size: 26),
-          const SizedBox(width: 12),
-          const Text('DIRECT', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, letterSpacing: 2.4)),
-          const SizedBox(width: 10),
-          const SizedBox(height: 20, child: VerticalDivider(width: 1, color: Color(0x558C86A7))),
-          const SizedBox(width: 9),
-          const Text('ARCHIVE', style: TextStyle(color: Color(0xFFAAA7B8), fontSize: 9, letterSpacing: 2.1)),
-        ],
-      ),
+      titleSpacing: 18,
+      title: Row(children: [
+        _buildPortalMark(size: 28),
+        const SizedBox(width: 12),
+        Container(width: 42, height: 1, decoration: const BoxDecoration(gradient: LinearGradient(colors: [Color(0xFFC32B94), Color(0x00C32B94)]))),
+      ]),
       actions: [
         PopupMenuButton<_ArchiveAction>(
           tooltip: 'Archive actions',
@@ -562,22 +587,24 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
       );
 
   Widget _buildDateDivider(String date) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 14),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.035),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0x338E83AA)),
-      ),
-      child: Text(
-        date,
-        style: TextStyle(
-          color: Colors.white.withOpacity(0.65),
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-          letterSpacing: 0.5,
-        ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 15),
+      child: Row(
+        children: [
+          Expanded(child: Container(height: 1, color: const Color(0x336B5C91))),
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 4),
+            decoration: BoxDecoration(
+              color: const Color(0xDB0A0911),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: const Color(0x668D7AAF)),
+              boxShadow: const [BoxShadow(color: Color(0x44D728A0), blurRadius: 12)],
+            ),
+            child: Text(date, style: const TextStyle(color: Color(0xFFD7CFDD), fontSize: 10, fontWeight: FontWeight.w600, letterSpacing: .8)),
+          ),
+          Expanded(child: Container(height: 1, color: const Color(0x336B5C91))),
+        ],
       ),
     );
   }

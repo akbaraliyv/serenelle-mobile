@@ -53,6 +53,14 @@ class ChatBubble extends StatelessWidget {
                     children: [
                       _buildBubbleBody(context),
 
+                      // A small node connects every message to the chamber's time spine.
+                      Positioned(
+                        top: 19,
+                        left: isMe ? -17 : null,
+                        right: isMe ? null : -17,
+                        child: IgnorePointer(child: _buildTimeNode(isMe)),
+                      ),
+
                       // Floating 3D Crystal Heart Reaction
                       if (message.reaction != null)
                         Positioned(
@@ -138,10 +146,10 @@ class ChatBubble extends StatelessWidget {
     }
 
     final bubbleRadius = BorderRadius.only(
-      topLeft: const Radius.circular(19),
-      topRight: const Radius.circular(19),
-      bottomLeft: Radius.circular(isMe ? 19 : 5),
-      bottomRight: Radius.circular(isMe ? 5 : 19),
+      topLeft: Radius.circular(isMe ? 24 : 7),
+      topRight: Radius.circular(isMe ? 7 : 24),
+      bottomLeft: Radius.circular(isMe ? 24 : 7),
+      bottomRight: Radius.circular(isMe ? 7 : 24),
     );
 
     final glassSurface = ClipRRect(
@@ -167,12 +175,12 @@ class ChatBubble extends StatelessWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: isMe
-                      ? const [Color(0x2AFFFFFF), Color(0x080A0710), Color(0x24160B14)]
-                      : const [Color(0x22FFFFFF), Color(0x0DFFFFFF), Color(0x140A090F)],
+                      ? const [Color(0x40FFFFFF), Color(0x06070710), Color(0x33160820)]
+                      : const [Color(0x32FFFFFF), Color(0x080C0D14), Color(0x28000000)],
                   stops: const [0, 0.42, 1],
                 ),
                 border: Border.all(
-                  color: isMe ? const Color(0x99F6D8FF) : const Color(0x668F87A5),
+                  color: isMe ? const Color(0xB9FFD7F3) : const Color(0x7D9187BE),
                   width: isMe ? 0.8 : 0.7,
                 ),
                 borderRadius: bubbleRadius,
@@ -188,9 +196,9 @@ class ChatBubble extends StatelessWidget {
                 height: 1,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: isMe
-                        ? const [Colors.transparent, Color(0xBFFFFFFF), Color(0x70F7B6D8), Colors.transparent]
-                        : const [Colors.transparent, Color(0x668F87A5), Color(0x33FFFFFF), Colors.transparent],
+                  colors: isMe
+                        ? const [Colors.transparent, Color(0xD6FFFFFF), Color(0xA4FF9CD7), Colors.transparent]
+                        : const [Colors.transparent, Color(0xA69B93C4), Color(0x55FFFFFF), Colors.transparent],
                   ),
                 ),
               ),
@@ -208,27 +216,27 @@ class ChatBubble extends StatelessWidget {
         borderRadius: bubbleRadius,
         color: Colors.transparent,
         border: Border.all(
-          color: isMe ? const Color(0x99F6D8FF) : const Color(0x668F87A5),
+          color: isMe ? const Color(0xB9FFD7F3) : const Color(0x7D9187BE),
           width: isMe ? 0.8 : 0.7,
         ),
         boxShadow: [
           BoxShadow(
             color: isMe
-                ? const Color(0x665A1C73)
+                ? const Color(0x77521588)
                 : const Color(0x70000000),
             blurRadius: isMe ? 22 : 18,
             offset: const Offset(0, 7),
           ),
           if (isMe)
             const BoxShadow(
-              color: Color(0x33F036A8),
-              blurRadius: 15,
+              color: Color(0x55ED21AA),
+              blurRadius: 20,
               spreadRadius: -3,
             )
           else
             const BoxShadow(
-              color: Color(0x225F5875),
-              blurRadius: 10,
+              color: Color(0x335D5A86),
+              blurRadius: 14,
               spreadRadius: -4,
             ),
         ],
@@ -361,6 +369,41 @@ class ChatBubble extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildTimeNode(bool isMe) {
+    return SizedBox(
+      width: 17,
+      height: 12,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Align(
+            alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+            child: Container(
+              width: 13,
+              height: 1,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: isMe
+                      ? const [Color(0x00FF53B7), Color(0xB7FF53B7)]
+                      : const [Color(0xA58A84B8), Color(0x008A84B8)],
+                ),
+              ),
+            ),
+          ),
+          Container(
+            width: 5,
+            height: 5,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: isMe ? const Color(0xFFFF72BD) : const Color(0xFFB1A7D1),
+              boxShadow: [BoxShadow(color: isMe ? const Color(0xAAFF24A5) : const Color(0x778F86B6), blurRadius: 7)],
+            ),
+          ),
+        ],
       ),
     );
   }

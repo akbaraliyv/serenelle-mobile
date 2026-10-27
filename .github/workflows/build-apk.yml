@@ -65,15 +65,15 @@ jobs:
       - name: Create GitHub Release with APK
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.8
-          name: "Serenelle Direct v1.0.8 — Liquid Glass Interface"
+          tag_name: v1.0.9
+          name: "Serenelle Direct v1.0.9 — Signal Chamber"
           body: |
-            ## Version 1.0.8
+            ## Version 1.0.9
 
-            - Viewport-aligned purple, magenta, and coral gradient flows through outgoing messages while scrolling.
-            - Incoming messages use a frosted obsidian surface with rim lighting and glass highlights.
-            - One-tap optical-aperture entrance animation replaces press-and-hold charging.
-            - Original messages and attachments are preserved.
+            - Signal Chamber vaqt chizig‘i va neon signal nuqtalari chat oqimini birlashtiradi.
+            - Aurora fon barmoq harakati va skroll energiyasiga javob beradi.
+            - Xabarlar uchun tutash viewport-gradient va frosted obsidian shisha qatlamlari yangilandi.
+            - Kirishdagi matn olib tashlandi; optik linza bir tegishda ochiladi.
 
             ### 📥 O'rnatish:
             Quyidagi `app-release.apk` faylini yuklab oling va telefoningizga o'rnating. Kelgusi barcha yangilanishlar ilova ichidan avtomatik amalga oshadi!

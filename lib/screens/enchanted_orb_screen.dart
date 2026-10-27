@@ -182,21 +182,16 @@ class _EnchantedOrbScreenState extends State<EnchantedOrbScreen>
             right: 0,
             bottom: math.max(30.0, bottomInset + 18),
             child: IgnorePointer(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(width: 28, height: 1, color: const Color(0x668D829F)),
-                  const SizedBox(height: 11),
-                  const Text(
-                    'TAP TO ENTER',
-                    style: TextStyle(
-                      color: Color(0xFF9B96A8),
-                      fontSize: 9,
-                      letterSpacing: 2.8,
-                      fontWeight: FontWeight.w500,
+              child: Center(
+                child: Container(
+                  width: 32,
+                  height: 1,
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0x00917AAF), Color(0xAAE24BA8), Color(0x00917AAF)],
                     ),
                   ),
-                ],
+                ),
               ),
             ),
           ),
