@@ -4,7 +4,7 @@ const path = require('path');
 // 1. Copy MainActivity.kt into the generated Android namespace package.
 const gradlePath = path.join('android', 'app', 'build.gradle');
 const gradle = fs.readFileSync(gradlePath, 'utf8');
-const namespaceMatch = gradle.match(/namespace\s+["']([^"']+)["']/);
+const namespaceMatch = gradle.match(/namespace\s*=?\s*["']([^"']+)["']/);
 if (!namespaceMatch) throw new Error('Android namespace not found in app/build.gradle');
 const namespace = namespaceMatch[1];
 const kotlinDir = path.join('android', 'app', 'src', 'main', 'kotlin', ...namespace.split('.'));
