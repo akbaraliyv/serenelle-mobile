@@ -513,7 +513,7 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
                     ],
                   ),
                   Text(
-                    '14,170 xabar • Stories ni ko\'ring',
+                    '_sserenelle • 14,170 ta xabar',
                     style: TextStyle(
                       color: Colors.white.withOpacity(0.5),
                       fontSize: 10.5,

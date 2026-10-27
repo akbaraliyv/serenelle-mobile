@@ -38,10 +38,24 @@ class ChatMessage {
   bool get isStickerEmoji {
     if (text == null) return false;
     final trimmed = text!.trim();
-    if (trimmed.isEmpty) return false;
-    // Check if message consists purely of 1-3 emojis with no letters or digits
-    final emojiRegex = RegExp(r'^(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff]|❤️|👍|🗿|😂|🔥|✨|🥰|😭|🥺|👏|❌|✅)+$');
-    return emojiRegex.hasMatch(trimmed) && trimmed.length <= 12;
+    if (trimmed.isEmpty || trimmed.length > 32) return false;
+    // Exclude if contains regular letters or digits
+    if (RegExp(r'[a-zA-Z0-9\u0400-\u04FF]').hasMatch(trimmed)) return false;
+    // Must contain emoji or pictographic symbols
+    final emojiRegex = RegExp(r'(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff]|❤️|👍|🗿|😂|🔥|✨|🥰|😭|🥺|👏|❌|✅|🤣|💯|✖️)');
+    return emojiRegex.hasMatch(trimmed);
+  }
+
+  bool get isGifMessage {
+    if (text == null) return false;
+    final t = text!.trim().toLowerCase();
+    return t.contains('.gif') || t.contains('giphy.com');
+  }
+
+  String? get extractedGifUrl {
+    if (!isGifMessage || text == null) return null;
+    final match = RegExp(r'(https?://[^\s]+\.gif[^\s]*)').firstMatch(text!);
+    return match?.group(0);
   }
 
   factory ChatMessage.fromMap(Map<String, dynamic> map) {

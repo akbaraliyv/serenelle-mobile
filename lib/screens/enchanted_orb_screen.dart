@@ -46,7 +46,7 @@ class _EnchantedOrbScreenState extends State<EnchantedOrbScreen>
     // 3. Supernova burst animation
     _burstController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 900),
+      duration: const Duration(milliseconds: 800),
     );
 
     _burstAnimation = CurvedAnimation(
@@ -89,14 +89,14 @@ class _EnchantedOrbScreenState extends State<EnchantedOrbScreen>
 
   void _startChargingLoop() async {
     while (_isCharging && _chargeProgress < 1.0) {
-      await Future.delayed(const Duration(milliseconds: 30));
+      await Future.delayed(const Duration(milliseconds: 25));
       if (!mounted || !_isCharging) break;
       setState(() {
-        _chargeProgress = math.min(1.0, _chargeProgress + 0.035);
+        _chargeProgress = math.min(1.0, _chargeProgress + 0.045);
       });
-      if (_chargeProgress > 0.3 && _chargeProgress < 0.35) {
+      if (_chargeProgress > 0.3 && _chargeProgress < 0.38) {
         HapticFeedback.selectionClick();
-      } else if (_chargeProgress > 0.7 && _chargeProgress < 0.75) {
+      } else if (_chargeProgress > 0.7 && _chargeProgress < 0.78) {
         HapticFeedback.mediumImpact();
       }
     }
@@ -126,7 +126,7 @@ class _EnchantedOrbScreenState extends State<EnchantedOrbScreen>
     } else {
       Navigator.of(context).pushReplacement(
         PageRouteBuilder(
-          transitionDuration: const Duration(milliseconds: 700),
+          transitionDuration: const Duration(milliseconds: 650),
           pageBuilder: (_, __, ___) => const ChatScreen(),
           transitionsBuilder: (_, animation, __, child) {
             return FadeTransition(
@@ -139,24 +139,13 @@ class _EnchantedOrbScreenState extends State<EnchantedOrbScreen>
     }
   }
 
-  void _skipToChat() {
-    HapticFeedback.lightImpact();
-    if (widget.returnToChatOnClose) {
-      Navigator.of(context).pop();
-    } else {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const ChatScreen()),
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    final orbSize = math.min(size.width * 0.76, 320.0);
+    final orbSize = math.min(size.width * 0.78, 330.0);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF030104), // Pure Deep OLED
+      backgroundColor: const Color(0xFF030104), // Pure Deep OLED void
       body: Stack(
         fit: StackFit.expand,
         children: [
@@ -174,77 +163,12 @@ class _EnchantedOrbScreenState extends State<EnchantedOrbScreen>
             },
           ),
 
-          // 2. Top Header Title & Romantic Badge
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 28,
-            left: 24,
-            right: 24,
-            child: Column(
-              children: [
-                ShaderMask(
-                  shaderCallback: (bounds) => const LinearGradient(
-                    colors: [
-                      Color(0xFFFFFFFF),
-                      Color(0xFFFFB2D1),
-                      Color(0xFFE0C3FC),
-                    ],
-                  ).createShader(bounds),
-                  child: const Text(
-                    'Azizbek & Serenelle',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 1.1,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
-                  decoration: BoxDecoration(
-                    color: const Color(0x33E91E63),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: const Color(0x55FF4081),
-                      width: 1,
-                    ),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x22FF4081),
-                        blurRadius: 16,
-                        spreadRadius: 2,
-                      ),
-                    ],
-                  ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.auto_awesome, color: Color(0xFFFFD700), size: 14),
-                      SizedBox(width: 8),
-                      Text(
-                        '14,170 Xotira  •  2 Yillik Suhbat',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // 3. Central Interactive 3D Enchanted Crystal Orb
+          // 2. Central Interactive 3D Crystal Orb (Touch or Tap to Open)
           Center(
             child: GestureDetector(
               onPanUpdate: (details) {
                 setState(() {
-                  _orbOffset += details.delta * 0.4;
+                  _orbOffset += details.delta * 0.35;
                   _orbOffset = Offset(
                     _orbOffset.dx.clamp(-40.0, 40.0),
                     _orbOffset.dy.clamp(-40.0, 40.0),
@@ -258,7 +182,8 @@ class _EnchantedOrbScreenState extends State<EnchantedOrbScreen>
               },
               onTapDown: (_) => _onChargeStart(),
               onTapUp: (_) {
-                if (_chargeProgress < 0.2) {
+                if (_chargeProgress < 0.25) {
+                  // Direct tap also triggers burst cleanly
                   _triggerSupernova();
                 } else {
                   _onChargeEnd();
@@ -290,78 +215,6 @@ class _EnchantedOrbScreenState extends State<EnchantedOrbScreen>
                   );
                 },
               ),
-            ),
-          ),
-
-          // 4. Bottom Instructions & Direct Jump Pill
-          Positioned(
-            bottom: MediaQuery.of(context).padding.bottom + 28,
-            left: 24,
-            right: 24,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                AnimatedBuilder(
-                  animation: _pulseController,
-                  builder: (context, _) {
-                    return Opacity(
-                      opacity: 0.7 + _pulseController.value * 0.3,
-                      child: Text(
-                        _isCharging
-                            ? 'Xotiralar koinoti uyg\'onmoqda...'
-                            : 'Sehrli kristall sharni bosing va ushlab turing ✨',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: _isCharging
-                              ? const Color(0xFFFF4081)
-                              : Colors.white.withOpacity(0.85),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          letterSpacing: 0.3,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 18),
-                InkWell(
-                  onTap: _skipToChat,
-                  borderRadius: BorderRadius.circular(24),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 12,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0x1AFFFFFF),
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(
-                        color: Colors.white.withOpacity(0.15),
-                        width: 1,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          widget.returnToChatOnClose ? 'Chatga qaytish' : 'To\'g\'ridan-to\'g\'ri chatga kirish',
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.9),
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        Icon(
-                          Icons.arrow_forward_rounded,
-                          color: Colors.white.withOpacity(0.8),
-                          size: 16,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
             ),
           ),
         ],
@@ -399,7 +252,7 @@ class _CosmicBackgroundPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width * 0.5, size.height * 0.48);
+    final center = Offset(size.width * 0.5, size.height * 0.5);
 
     final nebulaPaint = Paint()
       ..shader = RadialGradient(
@@ -485,7 +338,7 @@ class _EnchantedOrbPainter extends CustomPainter {
       canvas.drawCircle(Offset(px, py), p.size * (1.0 + charge * 0.5), pPaint);
     }
 
-    // 4. Center Glowing Twin Rings (Infinity Sign of Azizbek & Serenelle)
+    // 4. Center Glowing Twin Rings (Ethereal Symbol)
     final ringPaint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.2 + charge * 2.0
@@ -499,9 +352,9 @@ class _EnchantedOrbPainter extends CustomPainter {
         transform: GradientRotation(time),
       ).createShader(Rect.fromCircle(center: center, radius: 45));
 
-    final rOffset = 18.0;
-    canvas.drawCircle(center.translate(-rOffset, 0), 24, ringPaint);
-    canvas.drawCircle(center.translate(rOffset, 0), 24, ringPaint);
+    final rOffset = 16.0;
+    canvas.drawCircle(center.translate(-rOffset, 0), 22, ringPaint);
+    canvas.drawCircle(center.translate(rOffset, 0), 22, ringPaint);
 
     // 5. Crystal Specular Glare / Highlight (Upper-Left Reflection)
     final glarePaint = Paint()

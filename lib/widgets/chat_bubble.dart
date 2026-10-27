@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/chat_message.dart';
 import 'audio_player_bubble.dart';
+import 'jelly_sticker.dart';
 
 class ChatBubble extends StatelessWidget {
   final ChatMessage message;
@@ -113,22 +114,47 @@ class ChatBubble extends StatelessWidget {
   }
 
   Widget _buildBubbleBody(BuildContext context) {
-    // 1. Standalone Large 3D Emoji Sticker (no bubble background)
+    final isMe = message.isMe;
+
+    // 1. Standalone 3D Animated Jelly Sticker (no bubble background)
     if (message.isStickerEmoji) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-        child: Text(
-          message.text!,
-          style: const TextStyle(
-            fontSize: 44,
-            height: 1.15,
-            shadows: [
-              Shadow(
-                color: Color(0x66000000),
-                blurRadius: 16,
-                offset: Offset(0, 4),
-              ),
-            ],
+      return JellySticker(
+        text: message.text!,
+        isMe: isMe,
+      );
+    }
+
+    // 2. Animated GIF Sticker
+    if (message.isGifMessage && message.extractedGifUrl != null) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(18),
+        child: Container(
+          constraints: BoxConstraints(
+            maxWidth: MediaQuery.of(context).size.width * 0.72,
+            maxHeight: 250,
+          ),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: Colors.white12),
+          ),
+          child: Image.network(
+            message.extractedGifUrl!,
+            fit: BoxFit.cover,
+            loadingBuilder: (context, child, progress) {
+              if (progress == null) return child;
+              return Container(
+                height: 160,
+                color: const Color(0x22FFFFFF),
+                child: const Center(
+                  child: CircularProgressIndicator(color: Color(0xFFFF2A6D), strokeWidth: 2),
+                ),
+              );
+            },
+            errorBuilder: (_, __, ___) => Container(
+              height: 120,
+              color: const Color(0x22FFFFFF),
+              child: const Center(child: Icon(Icons.gif_rounded, size: 40, color: Colors.white38)),
+            ),
           ),
         ),
       );

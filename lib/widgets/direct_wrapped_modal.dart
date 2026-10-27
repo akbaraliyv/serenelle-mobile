@@ -144,7 +144,7 @@ class _DirectWrappedModalState extends State<DirectWrappedModal>
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        'Azizbek & Serenelle',
+                        'serenelle.',
                         style: TextStyle(
                           color: Colors.white.withOpacity(0.85),
                           fontSize: 14,

@@ -56,8 +56,8 @@ jobs:
       - name: Create GitHub Release with APK
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.3
-          name: "Serenelle Direct v1.0.3 (Magic Enchanted Orb, Direct Wrapped & Dynamic Scroll)"
+          tag_name: v1.0.4
+          name: "Serenelle Direct v1.0.4 (3D Jelly Animated Stickers & Pure Minimal Orb)"
           body: |
             ## 📱 Serenelle Direct v1.0.2 — O'zi Avtomatik Yangilanadigan Tizim
 

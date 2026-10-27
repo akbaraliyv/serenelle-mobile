@@ -1,7 +1,7 @@
 name: serenelle_direct
 description: "Ultra-fast 120Hz Native Instagram Direct Chat Archive with 14,170 messages"
 publish_to: "none"
-version: 1.0.3+3
+version: 1.0.4+4
 
 environment:
   sdk: ">=3.0.0 <4.0.0"
