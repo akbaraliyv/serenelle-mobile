@@ -259,7 +259,7 @@ class _ChatScreenState extends State<ChatScreen> {
           // Name & Verification Badge
           Expanded(
             child: Column(
-              crossAxisAlignment: CrossAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Row(
                   children: [

@@ -109,7 +109,7 @@ class _AudioPlayerBubbleState extends State<AudioPlayerBubble> {
           // Waveform bars simulation
           Expanded(
             child: Column(
-              crossAxisAlignment: CrossAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
                 Row(

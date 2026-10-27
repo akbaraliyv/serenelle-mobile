@@ -36,13 +36,13 @@ class ChatBubble extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 2),
         child: Column(
           crossAxisAlignment:
-              isMe ? CrossAlignment.end : CrossAlignment.start,
+              isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
           children: [
             // Row containing Avatar (if them) and Bubble
             Row(
               mainAxisAlignment:
                   isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
-              crossAxisAlignment: CrossAlignment.end,
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 if (!isMe) ...[
                   // Partner Mini Avatar Ring
@@ -173,7 +173,7 @@ class ChatBubble extends StatelessWidget {
       ),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       child: Column(
-        crossAxisAlignment: CrossAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Quoted reply message (if any)
           if (message.replyText != null) _buildReplyQuote(),
@@ -217,7 +217,7 @@ class ChatBubble extends StatelessWidget {
         ),
       ),
       child: Column(
-        crossAxisAlignment: CrossAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             message.replySender ?? 'Xabar',
