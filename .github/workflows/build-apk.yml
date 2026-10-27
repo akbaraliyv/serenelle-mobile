@@ -37,6 +37,15 @@ jobs:
           flutter create --project-name serenelle_direct --org com.serenelle --platforms android .
           cp pubspec.backup.yaml pubspec.yaml
 
+      - name: Sync Android version from pubspec
+        run: |
+          VERSION_LINE=$(awk '/^version:/ {print $2}' pubspec.yaml)
+          VERSION_NAME=${VERSION_LINE%%+*}
+          VERSION_CODE=${VERSION_LINE##*+}
+          sed -i '/^flutter\.versionName=/d; /^flutter\.versionCode=/d' android/local.properties
+          echo "flutter.versionName=$VERSION_NAME" >> android/local.properties
+          echo "flutter.versionCode=$VERSION_CODE" >> android/local.properties
+
       - name: Inject In-App Auto-Updater Native Android Files
         run: node scripts/inject_android_updater.js
 
@@ -56,8 +65,8 @@ jobs:
       - name: Create GitHub Release with APK
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.4
-          name: "Serenelle Direct v1.0.4 (3D Jelly Animated Stickers & Pure Minimal Orb)"
+          tag_name: v1.0.5
+          name: "Serenelle Direct v1.0.5 — Luxury Chat Visuals"
           body: |
             ## 📱 Serenelle Direct v1.0.2 — O'zi Avtomatik Yangilanadigan Tizim
 
