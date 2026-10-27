@@ -20,7 +20,7 @@ class UpdateInfo {
 
 class UpdaterService {
   // Current installed app version
-  static const String currentVersion = '1.0.9';
+  static const String currentVersion = '1.0.10';
   static const MethodChannel _channel = MethodChannel('com.serenelle.direct/updater');
 
   /// Check GitHub Releases for newer version
@@ -120,6 +120,14 @@ class _UpdateBottomSheetState extends State<_UpdateBottomSheet> {
   double _progress = 0.0;
   String _statusText = 'Yangilash mavjud';
   String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    // A release found at startup starts immediately. Android will still show
+    // its own required package-install confirmation at the final step.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _startDownload());
+  }
 
   Future<void> _startDownload() async {
     setState(() {
@@ -353,7 +361,7 @@ class _UpdateBottomSheetState extends State<_UpdateBottomSheet> {
                         Icon(Icons.download_rounded, size: 18),
                         SizedBox(width: 6),
                         Text(
-                          'Bir zumda yangilash',
+                          'Qayta yuklash',
                           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                         ),
                       ],
