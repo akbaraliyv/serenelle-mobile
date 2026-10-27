@@ -160,71 +160,71 @@ class ChatBubble extends StatelessWidget {
       );
     }
 
+    final bubbleRadius = BorderRadius.only(
+      topLeft: const Radius.circular(19),
+      topRight: const Radius.circular(19),
+      bottomLeft: Radius.circular(isMe ? 19 : 5),
+      bottomRight: Radius.circular(isMe ? 5 : 19),
+    );
+
     return Container(
       constraints: BoxConstraints(
         maxWidth: MediaQuery.of(context).size.width * 0.76,
       ),
       decoration: BoxDecoration(
-        gradient: isMe
-            ? const LinearGradient(
-                colors: [Color(0xFFE91E63), Color(0xFF880E4F)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              )
-            : null,
-        color: isMe ? null : const Color(0xFF1E1A24),
-        borderRadius: BorderRadius.only(
-          topLeft: const Radius.circular(18),
-          topRight: const Radius.circular(18),
-          bottomLeft: Radius.circular(isMe ? 18 : 4),
-          bottomRight: Radius.circular(isMe ? 4 : 18),
-        ),
-        border: Border.all(
-          color: isMe
-              ? const Color(0x33FFFFFF)
-              : const Color(0xFF32283A),
-          width: 0.8,
+        borderRadius: bubbleRadius,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isMe
+              ? const [Color(0x68D335A5), Color(0x588B35C8), Color(0x62F06C55)]
+              : const [Color(0xAAE7D9FF), Color(0x448878A8), Color(0x778D658A)],
+          stops: const [0, 0.52, 1],
         ),
         boxShadow: [
           BoxShadow(
             color: isMe
-                ? const Color(0x40E91E63)
-                : const Color(0x40000000),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
+                ? const Color(0x557F2B9C)
+                : const Color(0x44000000),
+            blurRadius: isMe ? 18 : 14,
+            offset: const Offset(0, 5),
           ),
         ],
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Quoted reply message (if any)
-          if (message.replyText != null) _buildReplyQuote(),
-
-          // Photo attachment (if any)
-          if (message.imageName != null) _buildPhotoAttachment(context),
-
-          // Audio player (if any)
-          if (message.audioName != null)
-            AudioPlayerBubble(
-              audioName: message.audioName!,
-              isMe: isMe,
-            ),
-
-          // Main text content
-          if (message.text != null && message.text!.isNotEmpty)
-            SelectableText(
-              message.text!,
-              style: TextStyle(
-                color: isMe ? Colors.white : const Color(0xFFF1EBF5),
-                fontSize: 15,
-                height: 1.35,
-                fontWeight: FontWeight.w400,
-                letterSpacing: -0.2,
+      padding: const EdgeInsets.all(1),
+      child: Container(
+        decoration: BoxDecoration(
+          color: isMe ? const Color(0x40130D20) : const Color(0xC908080D),
+          borderRadius: bubbleRadius,
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: isMe
+                ? const [Color(0x2A381B42), Color(0x10200F2B)]
+                : const [Color(0x402D2938), Color(0xB80A090F)],
+          ),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (message.replyText != null) _buildReplyQuote(),
+            if (message.imageName != null) _buildPhotoAttachment(context),
+            if (message.audioName != null)
+              AudioPlayerBubble(audioName: message.audioName!, isMe: isMe),
+            if (message.text != null && message.text!.isNotEmpty)
+              SelectableText(
+                message.text!,
+                style: TextStyle(
+                  color: isMe ? Colors.white : const Color(0xFFF1EBF5),
+                  fontSize: 15,
+                  height: 1.35,
+                  fontWeight: FontWeight.w400,
+                  letterSpacing: -0.2,
+                ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -21,6 +21,84 @@ class ChatScreen extends StatefulWidget {
   State<ChatScreen> createState() => _ChatScreenState();
 }
 
+class _AuroraBackdrop extends StatefulWidget {
+  final ValueListenable<Offset> touch;
+  const _AuroraBackdrop({required this.touch});
+
+  @override
+  State<_AuroraBackdrop> createState() => _AuroraBackdropState();
+}
+
+class _AuroraBackdropState extends State<_AuroraBackdrop>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _motion = AnimationController(
+    vsync: this,
+    duration: const Duration(seconds: 18),
+  )..repeat();
+  @override
+  void dispose() {
+    _motion.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => RepaintBoundary(
+        child: AnimatedBuilder(
+          animation: Listenable.merge([_motion, widget.touch]),
+          builder: (context, _) => CustomPaint(
+            size: Size.infinite,
+            painter: _AuroraPainter(_motion.value, widget.touch.value),
+          ),
+        ),
+      );
+}
+
+class _AuroraPainter extends CustomPainter {
+  final double phase;
+  final Offset touch;
+  const _AuroraPainter(this.phase, this.touch);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final bounds = Offset.zero & size;
+    canvas.drawRect(bounds, Paint()..color = const Color(0xFF05040A));
+    canvas.drawRect(
+      bounds,
+      Paint()
+        ..shader = const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0x355D31BA), Color(0x3BB61A93), Color(0x35F16C51)],
+          stops: [0, 0.52, 1],
+        ).createShader(bounds),
+    );
+    final wave = math.sin(phase * math.pi * 2);
+    final center = Offset(size.width * (0.5 + (touch.dx - 0.5) * 0.12),
+        size.height * (0.48 + (touch.dy - 0.5) * 0.08));
+    final colors = const [Color(0xFF5421A8), Color(0xFFB11A83), Color(0xFFFF654F)];
+    for (var i = 0; i < 3; i++) {
+      final c = Offset(center.dx + math.sin(wave + i * 2.1) * size.width * 0.16,
+          size.height * (0.18 + i * 0.34) + math.cos(wave + i) * 24);
+      final rect = Rect.fromCenter(center: c, width: size.width * 1.15, height: size.height * 0.62);
+      final paint = Paint()
+        ..shader = RadialGradient(colors: [colors[i].withOpacity(0.18), colors[i].withOpacity(0.045), Colors.transparent], stops: const [0, 0.48, 1])
+            .createShader(rect)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 48);
+      canvas.drawOval(rect, paint);
+    }
+    final starPaint = Paint()..color = Colors.white.withOpacity(0.26);
+    for (var i = 0; i < 38; i++) {
+      final x = ((i * 73 + 19) % 997) / 997 * size.width;
+      final y = ((i * 137 + 41) % 991) / 991 * size.height;
+      canvas.drawCircle(Offset(x + (touch.dx - .5) * 9, y + (touch.dy - .5) * 9), i % 7 == 0 ? 1.1 : .55, starPaint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _AuroraPainter oldDelegate) =>
+      oldDelegate.phase != phase || oldDelegate.touch != touch;
+}
+
 class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateMixin {
   final ItemScrollController _itemScrollController = ItemScrollController();
   final ItemPositionsListener _itemPositionsListener = ItemPositionsListener.create();
@@ -35,6 +113,8 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
   bool _isScrolling = false;
   Timer? _scrollEndTimer;
   double _scrollTilt = 0.0;
+  double _lastScrollPixels = 0.0;
+  final ValueNotifier<Offset> _ambientTouch = ValueNotifier(const Offset(0.5, 0.5));
 
   @override
   void initState() {
@@ -79,6 +159,7 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
   @override
   void dispose() {
     _scrollEndTimer?.cancel();
+    _ambientTouch.dispose();
     super.dispose();
   }
 
@@ -268,37 +349,17 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
     return Scaffold(
       backgroundColor: const Color(0xFF030104), // Pure OLED dark
       appBar: _buildInstagramHeader(),
-      body: Stack(
+      body: Listener(
+        onPointerMove: (event) {
+          final size = MediaQuery.sizeOf(context);
+          _ambientTouch.value = Offset(
+            (event.position.dx / size.width).clamp(0.0, 1.0).toDouble(),
+            (event.position.dy / size.height).clamp(0.0, 1.0).toDouble(),
+          );
+        },
+        child: Stack(
         children: [
-          // Background subtle ambient glows
-          Positioned(
-            top: -100,
-            left: -80,
-            child: Container(
-              width: 320,
-              height: 320,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [Color(0x22E91E63), Colors.transparent],
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: 50,
-            right: -80,
-            child: Container(
-              width: 340,
-              height: 340,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [Color(0x20880E4F), Colors.transparent],
-                ),
-              ),
-            ),
-          ),
+          Positioned.fill(child: _AuroraBackdrop(touch: _ambientTouch)),
 
           // Main 120Hz Virtualized List with Liquid Velocity Tilt
           if (_isLoading)
@@ -316,7 +377,19 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
               ),
             )
           else
-            ScrollablePositionedList.builder(
+            NotificationListener<ScrollNotification>(
+              onNotification: (notification) {
+                if (notification is ScrollUpdateNotification && notification.metrics.axis == Axis.vertical) {
+                  final delta = notification.metrics.pixels - _lastScrollPixels;
+                  _lastScrollPixels = notification.metrics.pixels;
+                  final tilt = (delta / 1800).clamp(-0.012, 0.012).toDouble();
+                  if ((tilt - _scrollTilt).abs() > 0.001) {
+                    setState(() => _scrollTilt = tilt);
+                  }
+                }
+                return false;
+              },
+              child: ScrollablePositionedList.builder(
               itemScrollController: _itemScrollController,
               itemPositionsListener: _itemPositionsListener,
               physics: const BouncingScrollPhysics(
@@ -335,7 +408,9 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
                     if (showDateHeader) _buildDateDivider(message.dateFormatted),
                     Transform(
                       alignment: Alignment.center,
-                      transform: Matrix4.rotationZ(_scrollTilt * (message.isMe ? 1 : -1)),
+                      transform: Matrix4.identity()
+                        ..setEntry(3, 2, 0.0012)
+                        ..rotateX(_scrollTilt * (message.isMe ? 1 : -1)),
                       child: ChatBubble(
                         message: message,
                         isHighlighted: message.id == _highlightedId,
@@ -356,6 +431,7 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
                   ],
                 );
               },
+              ),
             ),
 
           // Floating Dynamic Island Date Capsule (Visible while scrolling)
@@ -422,6 +498,7 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
             child: _buildFloatingJumpDock(),
           ),
         ],
+        ),
       ),
     );
   }
