@@ -31,7 +31,7 @@ class ChatBubble extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
           color: isHighlighted
-              ? const Color(0x33E91E63)
+              ? const Color(0x337C6F9A)
               : Colors.transparent,
         ),
         padding: const EdgeInsets.symmetric(vertical: 2),
@@ -45,30 +45,6 @@ class ChatBubble extends StatelessWidget {
                   isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                if (!isMe) ...[
-                  // Partner Mini Avatar Ring
-                  Container(
-                    width: 26,
-                    height: 26,
-                    margin: const EdgeInsets.only(right: 8, bottom: 4),
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        colors: [Color(0xFFE91E63), Color(0xFF9C27B0)],
-                      ),
-                    ),
-                    alignment: Alignment.center,
-                    child: const Text(
-                      's',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-
                 // Main Bubble Content
                 Flexible(
                   child: Stack(
@@ -94,7 +70,7 @@ class ChatBubble extends StatelessWidget {
             Padding(
               padding: EdgeInsets.only(
                 top: 4,
-                left: isMe ? 0 : 36,
+                left: isMe ? 0 : 4,
                 right: isMe ? 6 : 0,
                 bottom: message.reaction != null ? 8 : 2,
               ),
@@ -146,7 +122,7 @@ class ChatBubble extends StatelessWidget {
                 height: 160,
                 color: const Color(0x22FFFFFF),
                 child: const Center(
-                  child: CircularProgressIndicator(color: Color(0xFFFF2A6D), strokeWidth: 2),
+                  child: CircularProgressIndicator(color: Color(0xFFB8A8E0), strokeWidth: 2),
                 ),
               );
             },
@@ -177,7 +153,7 @@ class ChatBubble extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: isMe
-              ? const [Color(0x68D335A5), Color(0x588B35C8), Color(0x62F06C55)]
+              ? const [Color(0x70A695D0), Color(0x608D7AA6), Color(0x70C89579)]
               : const [Color(0xAAE7D9FF), Color(0x448878A8), Color(0x778D658A)],
           stops: const [0, 0.52, 1],
         ),
@@ -194,14 +170,14 @@ class ChatBubble extends StatelessWidget {
       padding: const EdgeInsets.all(1),
       child: Container(
         decoration: BoxDecoration(
-          color: isMe ? const Color(0x40130D20) : const Color(0xC908080D),
+          color: isMe ? const Color(0x30130D20) : const Color(0x7208080D),
           borderRadius: bubbleRadius,
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: isMe
                 ? const [Color(0x2A381B42), Color(0x10200F2B)]
-                : const [Color(0x402D2938), Color(0xB80A090F)],
+                : const [Color(0x342D2938), Color(0x700A090F)],
           ),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -237,7 +213,7 @@ class ChatBubble extends StatelessWidget {
         color: Colors.black.withOpacity(0.25),
         borderRadius: BorderRadius.circular(10),
         border: const Border(
-          left: BorderSide(color: Color(0xFFFF4081), width: 3),
+            left: BorderSide(color: Color(0xFFB6A9D7), width: 2),
         ),
       ),
       child: Column(
@@ -246,7 +222,7 @@ class ChatBubble extends StatelessWidget {
           Text(
             message.replySender ?? 'Xabar',
             style: const TextStyle(
-              color: Color(0xFFFF80AB),
+              color: Color(0xFFD0C5E5),
               fontSize: 11,
               fontWeight: FontWeight.bold,
             ),
@@ -294,15 +270,15 @@ class ChatBubble extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
       decoration: BoxDecoration(
-        color: const Color(0xFF26101D),
+          color: const Color(0xFF18151F),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: const Color(0xFFFF2A6D).withOpacity(0.55),
+          color: const Color(0xFFB6A9D7).withOpacity(0.5),
           width: 1.2,
         ),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x66FF2A6D),
+            color: Color(0x558F82B1),
             blurRadius: 8,
             offset: Offset(0, 2),
           ),
@@ -314,7 +290,7 @@ class ChatBubble extends StatelessWidget {
           fontSize: 12,
           shadows: [
             Shadow(
-              color: Color(0xFFFF2A6D),
+              color: Color(0xFFB8A8E0),
               blurRadius: 6,
             ),
           ],

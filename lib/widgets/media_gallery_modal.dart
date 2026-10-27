@@ -55,7 +55,7 @@ class _MediaGalleryModalState extends State<MediaGalleryModal> {
     return Container(
       height: MediaQuery.of(context).size.height * 0.88,
       decoration: const BoxDecoration(
-        color: Color(0xFF0C0714),
+        color: Color(0xFF09090E),
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
         boxShadow: [
           BoxShadow(
@@ -84,14 +84,15 @@ class _MediaGalleryModalState extends State<MediaGalleryModal> {
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Row(
               children: [
-                const Icon(Icons.collections_rounded, color: Color(0xFFFF2A6D), size: 22),
+                const Icon(Icons.grid_view_rounded, color: Color(0xFFB6A9D7), size: 20),
                 const SizedBox(width: 10),
                 const Text(
-                  'Mediateka & Xotiralar',
+                  'MEDIA',
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 2.2,
                   ),
                 ),
                 const Spacer(),
@@ -118,7 +119,7 @@ class _MediaGalleryModalState extends State<MediaGalleryModal> {
                 children: [
                   Expanded(
                     child: _buildSegmentButton(
-                      title: 'Rasmlar (${_photos.length})',
+                      title: 'PHOTOS  ${_photos.length}',
                       isSelected: _selectedTab == 0,
                       onTap: () {
                         HapticFeedback.selectionClick();
@@ -128,7 +129,7 @@ class _MediaGalleryModalState extends State<MediaGalleryModal> {
                   ),
                   Expanded(
                     child: _buildSegmentButton(
-                      title: 'Ovozli (${_audios.length})',
+                      title: 'AUDIO  ${_audios.length}',
                       isSelected: _selectedTab == 1,
                       onTap: () {
                         HapticFeedback.selectionClick();
@@ -162,12 +163,12 @@ class _MediaGalleryModalState extends State<MediaGalleryModal> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(vertical: 9),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFFF2A6D) : Colors.transparent,
+          color: isSelected ? const Color(0xFF48405F) : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
           boxShadow: isSelected
               ? const [
                   BoxShadow(
-                    color: Color(0x55FF2A6D),
+                    color: Color(0x554F466D),
                     blurRadius: 10,
                     offset: Offset(0, 2),
                   ),
@@ -286,17 +287,18 @@ class _MediaGalleryModalState extends State<MediaGalleryModal> {
               width: 40,
               height: 40,
               decoration: const BoxDecoration(
-                color: Color(0x33FF2A6D),
+                color: Color(0x333F3856),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.mic_rounded, color: Color(0xFFFF2A6D), size: 20),
+              child: const Icon(Icons.graphic_eq_rounded, color: Color(0xFFC3B5E0), size: 20),
             ),
             title: Text(
-              item.message.senderName,
+              'VOICE NOTE',
               style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.w600,
-                fontSize: 14,
+                fontSize: 10,
+                letterSpacing: 1.4,
               ),
             ),
             subtitle: Text(
@@ -309,15 +311,15 @@ class _MediaGalleryModalState extends State<MediaGalleryModal> {
             trailing: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
-                color: const Color(0x22FF2A6D),
+                color: const Color(0x221E1B29),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: const Text(
                 'Chatda ko\'rish',
                 style: TextStyle(
-                  color: Color(0xFFFF4081),
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
+                  color: Color(0xFFC3B5E0),
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),

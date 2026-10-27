@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../models/chat_message.dart';
 
 class DateFilterModal extends StatelessWidget {
@@ -17,7 +16,7 @@ class DateFilterModal extends StatelessWidget {
     return Container(
       height: MediaQuery.of(context).size.height * 0.78,
       decoration: const BoxDecoration(
-        color: Color(0xFF140E1B),
+        color: Color(0xFF09090E),
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
@@ -38,22 +37,24 @@ class DateFilterModal extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
             child: Row(
               children: [
-                const Icon(Icons.calendar_month_rounded, color: Color(0xFFFF2A6D), size: 22),
+                const Icon(Icons.calendar_month_rounded, color: Color(0xFFB6A9D7), size: 20),
                 const SizedBox(width: 10),
-                const Text(
-                  'Sanani tanlang (95 kun)',
+                Text(
+                  'DATES  ·  ${dates.length}',
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 1.8,
                   ),
                 ),
                 const Spacer(),
                 Text(
-                  '19-Fev — 29-Iyl',
+                  'ARCHIVE INDEX',
                   style: TextStyle(
                     color: Colors.white.withOpacity(0.4),
-                    fontSize: 12,
+                    fontSize: 9,
+                    letterSpacing: 1.4,
                   ),
                 ),
               ],
@@ -74,19 +75,18 @@ class DateFilterModal extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   onTap: () {
-                    HapticFeedback.lightImpact();
                     Navigator.pop(context);
                     onSelectDate(d.firstIndex, d.firstId);
                   },
                   leading: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF281326),
+                      color: const Color(0xFF1C1A25),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: const Icon(
                       Icons.schedule_rounded,
-                      color: Color(0xFFFF4081),
+                      color: Color(0xFFC3B5E0),
                       size: 18,
                     ),
                   ),

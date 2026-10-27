@@ -15,6 +15,8 @@ import '../widgets/media_gallery_modal.dart';
 import '../services/updater_service.dart';
 import 'enchanted_orb_screen.dart';
 
+enum _ArchiveAction { search, dates, media, random, recap, portal, top, latest, update }
+
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
 
@@ -265,7 +267,12 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => const DirectWrappedModal(),
+      builder: (_) => DirectWrappedModal(
+        messageCount: _messages.length,
+        activeDays: _dates.length,
+        photoCount: _messages.where((message) => message.imageName != null).length,
+        audioCount: _messages.where((message) => message.audioName != null).length,
+      ),
     );
   }
 
@@ -284,31 +291,10 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
 
   void _jumpToRandomMemory() {
     if (_messages.isEmpty) return;
-    HapticFeedback.heavyImpact();
+    HapticFeedback.selectionClick();
     final randomIdx = math.Random().nextInt(_messages.length);
     final msg = _messages[randomIdx];
     _scrollToIndex(randomIdx, highlightId: msg.id);
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Text('🎲', style: TextStyle(fontSize: 18)),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                '${msg.dateFormatted} lahzasiga sakraldi!',
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: const Color(0xFFE91E63),
-        duration: const Duration(seconds: 2),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    );
   }
 
   void _openEnchantedOrb() {
@@ -337,18 +323,50 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Sizda eng so\'nggi versiya (v1.0.6) o\'rnatilgan!'),
-          backgroundColor: Color(0xFF2E7D32),
+          content: Text('Eng so\'nggi versiya o\'rnatilgan.'),
+          backgroundColor: const Color(0xFF17161E),
           duration: Duration(seconds: 2),
         ),
       );
     }
   }
 
+  void _handleArchiveAction(_ArchiveAction action) {
+    switch (action) {
+      case _ArchiveAction.search:
+        _openSearch();
+        break;
+      case _ArchiveAction.dates:
+        _openDateFilter();
+        break;
+      case _ArchiveAction.media:
+        _openMediaGallery();
+        break;
+      case _ArchiveAction.random:
+        _jumpToRandomMemory();
+        break;
+      case _ArchiveAction.recap:
+        _openDirectWrapped();
+        break;
+      case _ArchiveAction.portal:
+        _openEnchantedOrb();
+        break;
+      case _ArchiveAction.top:
+        _scrollToTop();
+        break;
+      case _ArchiveAction.latest:
+        _scrollToBottom();
+        break;
+      case _ArchiveAction.update:
+        _manualCheckUpdate();
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF030104), // Pure OLED dark
+      backgroundColor: const Color(0xFF050509),
       appBar: _buildInstagramHeader(),
       body: Listener(
         onPointerMove: (event) {
@@ -368,11 +386,11 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  CircularProgressIndicator(color: Color(0xFFFF2A6D)),
+                  CircularProgressIndicator(color: Color(0xFFB8A8E0)),
                   SizedBox(height: 16),
                   Text(
-                    '14,170 ta xabar tayyorlanmoqda...',
-                    style: TextStyle(color: Colors.white70, fontSize: 14),
+                    'OPENING ARCHIVE',
+                    style: TextStyle(color: Color(0xFFAAA7B8), fontSize: 10, letterSpacing: 2.2),
                   ),
                 ],
               ),
@@ -397,7 +415,7 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
                 parent: AlwaysScrollableScrollPhysics(),
               ),
               itemCount: _messages.length,
-              padding: const EdgeInsets.only(top: 8, bottom: 85),
+              padding: const EdgeInsets.only(top: 8, bottom: 20),
               itemBuilder: (context, index) {
                 final message = _messages[index];
 
@@ -451,7 +469,7 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
                     color: const Color(0xE61E1428),
                     borderRadius: BorderRadius.circular(22),
                     border: Border.all(
-                      color: const Color(0x66FF2A6D),
+                      color: const Color(0x667C6F9A),
                       width: 1.2,
                     ),
                     boxShadow: const [
@@ -461,7 +479,7 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
                         offset: Offset(0, 4),
                       ),
                       BoxShadow(
-                        color: Color(0x33FF2A6D),
+                        color: Color(0x33897BA4),
                         blurRadius: 10,
                       ),
                     ],
@@ -471,7 +489,7 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
                     children: [
                       const Icon(
                         Icons.calendar_today_rounded,
-                        color: Color(0xFFFF4081),
+                        color: Color(0xFFC3B5E0),
                         size: 13,
                       ),
                       const SizedBox(width: 8),
@@ -491,13 +509,6 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
             ),
           ),
 
-          // Floating Safe-Area Jump Dock
-          Positioned(
-            bottom: 18,
-            left: 0,
-            right: 0,
-            child: _buildFloatingJumpDock(),
-          ),
         ],
         ),
       ),
@@ -506,146 +517,58 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
 
   PreferredSizeWidget _buildInstagramHeader() {
     return AppBar(
-      backgroundColor: const Color(0xE60D0914), // Glassmorphic header
+      backgroundColor: const Color(0xE6050509),
       elevation: 0,
       scrolledUnderElevation: 0,
-      titleSpacing: 8,
+      titleSpacing: 20,
       title: Row(
         children: [
-          // Story Gradient Avatar (Tap to open Direct Wrapped 2025!)
-          GestureDetector(
-            onTap: _openDirectWrapped,
-            child: Container(
-              padding: const EdgeInsets.all(2.5),
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: [Color(0xFFFBAA47), Color(0xFFD91A46), Color(0xFFA60F93)],
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Color(0x66D91A46),
-                    blurRadius: 8,
-                  ),
-                ],
-              ),
-              child: Container(
-                width: 36,
-                height: 36,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Color(0xFF140E1B),
-                ),
-                alignment: Alignment.center,
-                child: const Text(
-                  's',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-
-          // Name, Verification Badge & Wrapped trigger
-          Expanded(
-            child: GestureDetector(
-              onTap: _openDirectWrapped,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Text(
-                        'serenelle.',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: -0.3,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      const Icon(Icons.verified_rounded, color: Color(0xFF1E88E5), size: 13),
-                      const SizedBox(width: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFFE91E63), Color(0xFFFF9800)],
-                          ),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Text(
-                          'Wrapped ✨',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 9.5,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  Text(
-                    '_sserenelle • 14,170 ta xabar',
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.5),
-                      fontSize: 10.5,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+          _buildPortalMark(size: 26),
+          const SizedBox(width: 12),
+          const Text('DIRECT', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, letterSpacing: 2.4)),
+          const SizedBox(width: 10),
+          const SizedBox(height: 20, child: VerticalDivider(width: 1, color: Color(0x558C86A7))),
+          const SizedBox(width: 9),
+          const Text('ARCHIVE', style: TextStyle(color: Color(0xFFAAA7B8), fontSize: 9, letterSpacing: 2.1)),
         ],
       ),
       actions: [
-        // 🔮 Sehrli Kristall Shar (Reopen Enchanted Orb)
-        IconButton(
-          icon: const Icon(Icons.auto_awesome_rounded, color: Color(0xFFFFD700), size: 21),
-          tooltip: 'Sehrli Kristall Shar',
-          onPressed: _openEnchantedOrb,
+        PopupMenuButton<_ArchiveAction>(
+          tooltip: 'Archive actions',
+          icon: const Icon(Icons.more_horiz_rounded, color: Color(0xFFE7E4F0), size: 24),
+          color: const Color(0xFF111018),
+          onSelected: _handleArchiveAction,
+          itemBuilder: (_) => const [
+            PopupMenuItem(value: _ArchiveAction.search, child: Text('Qidiruv')),
+            PopupMenuItem(value: _ArchiveAction.dates, child: Text('Sana bo‘yicha')),
+            PopupMenuItem(value: _ArchiveAction.media, child: Text('Media')),
+            PopupMenuItem(value: _ArchiveAction.random, child: Text('Tasodifiy xabar')),
+            PopupMenuItem(value: _ArchiveAction.recap, child: Text('Arxiv ko‘rsatkichi')),
+            PopupMenuItem(value: _ArchiveAction.top, child: Text('Boshiga o‘tish')),
+            PopupMenuItem(value: _ArchiveAction.latest, child: Text('Eng yangisiga o‘tish')),
+            PopupMenuItem(value: _ArchiveAction.portal, child: Text('Kirish portali')),
+            PopupMenuItem(value: _ArchiveAction.update, child: Text('Yangilanishni tekshirish')),
+          ],
         ),
-        // 🎲 Tasodifiy Xotira Ruletkasi (Random Memory Roulette)
-        IconButton(
-          icon: const Icon(Icons.casino_rounded, color: Color(0xFF00F2FE), size: 21),
-          tooltip: 'Tasodifiy Lahza Ruletkasi',
-          onPressed: _jumpToRandomMemory,
-        ),
-        // 📸 Mediateka & Xotiralar (No bottom bar clutter!)
-        IconButton(
-          icon: const Icon(Icons.photo_library_rounded, color: Color(0xFFFF80AB), size: 21),
-          tooltip: 'Mediateka',
-          onPressed: _openMediaGallery,
-        ),
-        // 📅 Calendar Date Filter
-        IconButton(
-          icon: const Icon(Icons.calendar_month_rounded, color: Colors.white, size: 21),
-          tooltip: 'Sanalar filtri',
-          onPressed: _openDateFilter,
-        ),
-        // 🔍 FTS Search
-        IconButton(
-          icon: const Icon(Icons.search_rounded, color: Colors.white, size: 21),
-          tooltip: 'Qidirish',
-          onPressed: _openSearch,
-        ),
+        const SizedBox(width: 8),
       ],
     );
   }
+
+  Widget _buildPortalMark({required double size}) => SizedBox(
+        width: size,
+        height: size,
+        child: CustomPaint(painter: _PortalMarkPainter()),
+      );
 
   Widget _buildDateDivider(String date) {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 14),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.08),
+        color: Colors.white.withOpacity(0.035),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withOpacity(0.06)),
+        border: Border.all(color: const Color(0x338E83AA)),
       ),
       child: Text(
         date,
@@ -659,84 +582,20 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
     );
   }
 
-  Widget _buildFloatingJumpDock() {
-    return Center(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: const Color(0xE61A1322),
-          borderRadius: BorderRadius.circular(30),
-          border: Border.all(color: const Color(0x40FF2A6D), width: 1.2),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x66000000),
-              blurRadius: 18,
-              offset: Offset(0, 6),
-            ),
-            BoxShadow(
-              color: Color(0x33FF2A6D),
-              blurRadius: 12,
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Jump To Top Button
-            InkWell(
-              onTap: _scrollToTop,
-              borderRadius: BorderRadius.circular(20),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                child: const Row(
-                  children: [
-                    Icon(Icons.arrow_upward_rounded, color: Color(0xFFFF4081), size: 16),
-                    SizedBox(width: 5),
-                    Text(
-                      'Eng Tepaga',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+}
 
-            Container(
-              width: 1,
-              height: 18,
-              color: Colors.white.withOpacity(0.18),
-              margin: const EdgeInsets.symmetric(horizontal: 4),
-            ),
-
-            // Jump To Bottom Button
-            InkWell(
-              onTap: _scrollToBottom,
-              borderRadius: BorderRadius.circular(20),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                child: const Row(
-                  children: [
-                    Icon(Icons.arrow_downward_rounded, color: Color(0xFFFF4081), size: 16),
-                    SizedBox(width: 5),
-                    Text(
-                      'Eng Pastga',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+class _PortalMarkPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = size.center(Offset.zero);
+    final shader = const SweepGradient(
+      colors: [Color(0xFF8B78D6), Color(0xFFC5C3D9), Color(0xFFB68D74), Color(0xFF8B78D6)],
+    ).createShader(Offset.zero & size);
+    final paint = Paint()..style = PaintingStyle.stroke..strokeWidth = 1.25..shader = shader;
+    canvas.drawOval(Rect.fromCenter(center: center, width: size.width * 0.56, height: size.height * 0.88), paint);
+    canvas.drawOval(Rect.fromCenter(center: center, width: size.width * 0.9, height: size.height * 0.54), paint);
   }
+
+  @override
+  bool shouldRepaint(covariant _PortalMarkPainter oldDelegate) => false;
 }

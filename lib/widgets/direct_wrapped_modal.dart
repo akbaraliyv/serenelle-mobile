@@ -1,608 +1,197 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
-class DirectWrappedModal extends StatefulWidget {
-  const DirectWrappedModal({super.key});
+class DirectWrappedModal extends StatelessWidget {
+  final int messageCount;
+  final int activeDays;
+  final int photoCount;
+  final int audioCount;
 
-  @override
-  State<DirectWrappedModal> createState() => _DirectWrappedModalState();
-}
-
-class _DirectWrappedModalState extends State<DirectWrappedModal>
-    with SingleTickerProviderStateMixin {
-  int _currentIndex = 0;
-  final int _totalSlides = 4;
-  late AnimationController _progressController;
-  Timer? _slideTimer;
-
-  @override
-  void initState() {
-    super.initState();
-    _progressController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 5),
-    )..addStatusListener((status) {
-        if (status == AnimationStatus.completed) {
-          _nextSlide();
-        }
-      });
-
-    _progressController.forward();
-  }
-
-  @override
-  void dispose() {
-    _progressController.dispose();
-    _slideTimer?.cancel();
-    super.dispose();
-  }
-
-  void _nextSlide() {
-    if (_currentIndex < _totalSlides - 1) {
-      HapticFeedback.selectionClick();
-      setState(() {
-        _currentIndex++;
-      });
-      _progressController.reset();
-      _progressController.forward();
-    } else {
-      Navigator.of(context).pop();
-    }
-  }
-
-  void _prevSlide() {
-    if (_currentIndex > 0) {
-      HapticFeedback.selectionClick();
-      setState(() {
-        _currentIndex--;
-      });
-      _progressController.reset();
-      _progressController.forward();
-    }
-  }
+  const DirectWrappedModal({
+    super.key,
+    required this.messageCount,
+    required this.activeDays,
+    required this.photoCount,
+    required this.audioCount,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: Stack(
-        fit: StackFit.expand,
+    return Container(
+      height: MediaQuery.sizeOf(context).height * 0.88,
+      decoration: const BoxDecoration(
+        color: Color(0xFF08080D),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Stack(
         children: [
-          // Background Glow for current slide
-          _buildBackgroundGradient(),
-
-          // Slide Content
+          const Positioned.fill(child: CustomPaint(painter: _RecapAtmospherePainter())),
           SafeArea(
+            top: false,
             child: Column(
               children: [
-                // 1. Instagram Story Style Progress Bars
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  child: Row(
-                    children: List.generate(_totalSlides, (index) {
-                      return Expanded(
-                        child: Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 2.5),
-                          height: 3,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                          child: index < _currentIndex
-                              ? Container(
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(2),
-                                  ),
-                                )
-                              : (index == _currentIndex
-                                  ? AnimatedBuilder(
-                                      animation: _progressController,
-                                      builder: (_, __) {
-                                        return FractionallySizedBox(
-                                          alignment: Alignment.centerLeft,
-                                          widthFactor: _progressController.value,
-                                          child: Container(
-                                            decoration: BoxDecoration(
-                                              color: Colors.white,
-                                              borderRadius: BorderRadius.circular(2),
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                    )
-                                  : const SizedBox()),
-                        ),
-                      );
-                    }),
+                const SizedBox(height: 13),
+                Container(
+                  width: 38,
+                  height: 3,
+                  decoration: BoxDecoration(
+                    color: Colors.white24,
+                    borderRadius: BorderRadius.circular(2),
                   ),
                 ),
-
-                // 2. Header
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+                  padding: const EdgeInsets.fromLTRB(22, 22, 12, 0),
                   child: Row(
                     children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFFE91E63), Color(0xFFFF9800)],
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Text(
-                          'DIRECT WRAPPED',
+                      const Expanded(
+                        child: Text(
+                          'ARCHIVE INDEX',
                           style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 0.8,
+                            color: Color(0xFFB9B4C8),
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 2.4,
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'serenelle.',
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.85),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const Spacer(),
                       IconButton(
-                        icon: const Icon(Icons.close, color: Colors.white70),
+                        tooltip: 'Close',
                         onPressed: () => Navigator.of(context).pop(),
+                        icon: const Icon(Icons.close_rounded, color: Color(0xFFAAA7B8)),
                       ),
                     ],
                   ),
                 ),
-
-                // 3. Central Slide View
-                Expanded(
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTapUp: (details) {
-                      final width = MediaQuery.of(context).size.width;
-                      if (details.localPosition.dx < width * 0.35) {
-                        _prevSlide();
-                      } else {
-                        _nextSlide();
-                      }
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: _buildCurrentSlide(),
+                const Spacer(flex: 2),
+                const Text(
+                  'MESSAGES',
+                  style: TextStyle(
+                    color: Color(0xFFAAA7B8),
+                    fontSize: 10,
+                    letterSpacing: 3,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                ShaderMask(
+                  shaderCallback: (bounds) => const LinearGradient(
+                    colors: [Color(0xFFD5C9FF), Color(0xFFA99CCB), Color(0xFFC78E77)],
+                  ).createShader(bounds),
+                  child: Text(
+                    _formatCount(messageCount),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 58,
+                      height: 1,
+                      fontWeight: FontWeight.w300,
+                      letterSpacing: -2.5,
                     ),
                   ),
                 ),
-
-                // 4. Bottom Action
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 20, left: 24, right: 24),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: InkWell(
-                          onTap: () {
-                            HapticFeedback.lightImpact();
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Story posteri galereyaga saqlandi! ✨'),
-                                backgroundColor: Color(0xFFE91E63),
-                                duration: Duration(seconds: 2),
-                              ),
-                            );
-                          },
-                          borderRadius: BorderRadius.circular(16),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFFE91E63), Color(0xFF9C27B0)],
-                              ),
-                              borderRadius: BorderRadius.circular(16),
-                              boxShadow: const [
-                                BoxShadow(
-                                  color: Color(0x55E91E63),
-                                  blurRadius: 14,
-                                  offset: Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: const Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.share_rounded, color: Colors.white, size: 18),
-                                SizedBox(width: 8),
-                                Text(
-                                  'Story qilib ulashish',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBackgroundGradient() {
-    switch (_currentIndex) {
-      case 0:
-        return Container(
-          decoration: const BoxDecoration(
-            gradient: RadialGradient(
-              center: Alignment(0, -0.2),
-              radius: 1.1,
-              colors: [Color(0xFF311B92), Color(0xFF0F051D), Colors.black],
-            ),
-          ),
-        );
-      case 1:
-        return Container(
-          decoration: const BoxDecoration(
-            gradient: RadialGradient(
-              center: Alignment(0, -0.2),
-              radius: 1.1,
-              colors: [Color(0xFF880E4F), Color(0xFF1D0312), Colors.black],
-            ),
-          ),
-        );
-      case 2:
-        return Container(
-          decoration: const BoxDecoration(
-            gradient: RadialGradient(
-              center: Alignment(0, -0.2),
-              radius: 1.1,
-              colors: [Color(0xFF004D40), Color(0xFF021714), Colors.black],
-            ),
-          ),
-        );
-      default:
-        return Container(
-          decoration: const BoxDecoration(
-            gradient: RadialGradient(
-              center: Alignment(0, -0.2),
-              radius: 1.1,
-              colors: [Color(0xFF4A148C), Color(0xFF16042B), Colors.black],
-            ),
-          ),
-        );
-    }
-  }
-
-  Widget _buildCurrentSlide() {
-    switch (_currentIndex) {
-      case 0:
-        return _buildMilestonesSlide();
-      case 1:
-        return _buildRatioSlide();
-      case 2:
-        return _buildEmojisSlide();
-      case 3:
-      default:
-        return _buildNightOwlsSlide();
-    }
-  }
-
-  // Slide 1: 14,170 Messages Milestone
-  Widget _buildMilestonesSlide() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        const Icon(Icons.stars_rounded, color: Color(0xFFFFD700), size: 54),
-        const SizedBox(height: 16),
-        const Text(
-          'Sizlar 2 yilda',
-          style: TextStyle(
-            color: Colors.white70,
-            fontSize: 18,
-            fontWeight: FontWeight.w400,
-          ),
-        ),
-        const SizedBox(height: 8),
-        ShaderMask(
-          shaderCallback: (bounds) => const LinearGradient(
-            colors: [Color(0xFFFF2A6D), Color(0xFFFFD700), Color(0xFF00F2FE)],
-          ).createShader(bounds),
-          child: const Text(
-            '14,170',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 64,
-              fontWeight: FontWeight.w900,
-              letterSpacing: -1,
-            ),
-          ),
-        ),
-        const Text(
-          'ta xabar almashgansiz!',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 22,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        const SizedBox(height: 36),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _buildMiniBadge('95 kun', 'Faol kunlar'),
-            const SizedBox(width: 14),
-            _buildMiniBadge('67 ta', 'Rasmlar'),
-            const SizedBox(width: 14),
-            _buildMiniBadge('42 ta', 'Ovozli xabar'),
-          ],
-        ),
-      ],
-    );
-  }
-
-  // Slide 2: Balance Ratio (Serenelle vs Azizbek)
-  Widget _buildRatioSlide() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        const Text(
-          'Kim ko\'proq yozgan?',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 26,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-        const SizedBox(height: 28),
-        // Visual Bar
-        Container(
-          height: 38,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(19),
-            border: Border.all(color: Colors.white24, width: 1.5),
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(18),
-            child: Row(
-              children: [
-                Expanded(
-                  flex: 59,
-                  child: Container(
-                    color: const Color(0xFFFF2A6D),
-                    alignment: Alignment.center,
-                    child: const Text(
-                      '58.7%',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ),
-                ),
-                Expanded(
-                  flex: 41,
-                  child: Container(
-                    color: const Color(0xFF00F2FE),
-                    alignment: Alignment.center,
-                    child: const Text(
-                      '41.3%',
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 32),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            Column(
-              children: [
+                const SizedBox(height: 13),
                 Container(
-                  width: 14,
-                  height: 14,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFFF2A6D),
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                const Text(
-                  'Serenelle',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16),
-                ),
-                const Text(
-                  '8,318 ta xabar',
-                  style: TextStyle(color: Colors.white60, fontSize: 13),
-                ),
-              ],
-            ),
-            Column(
-              children: [
-                Container(
-                  width: 14,
-                  height: 14,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF00F2FE),
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                const Text(
-                  'Azizbek',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16),
-                ),
-                const Text(
-                  '5,852 ta xabar',
-                  style: TextStyle(color: Colors.white60, fontSize: 13),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  // Slide 3: Top Emojis
-  Widget _buildEmojisSlide() {
-    final emojis = [
-      {'e': '😂', 'name': 'Kulgilar qiroli', 'count': '1,840 marta'},
-      {'e': '❤️', 'name': 'Cheksiz mehr', 'count': '920 marta'},
-      {'e': '🗿', 'name': 'Afsonaviy moyai', 'count': '480 marta'},
-      {'e': '🥺', 'name': 'Erkalik', 'count': '310 marta'},
-      {'e': '✨', 'name': 'Sehr', 'count': '240 marta'},
-    ];
-
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        const Text(
-          'Eng ko\'p ishlatilgan emojilar',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 24,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-        const SizedBox(height: 24),
-        ...emojis.map((item) {
-          return Container(
-            margin: const EdgeInsets.only(bottom: 10),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            decoration: BoxDecoration(
-              color: const Color(0x22FFFFFF),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: Colors.white12),
-            ),
-            child: Row(
-              children: [
-                Text(item['e']!, style: const TextStyle(fontSize: 26)),
-                const SizedBox(width: 14),
-                Text(
-                  item['name']!,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 15,
-                  ),
+                  width: 42,
+                  height: 1,
+                  color: const Color(0x99B5A4D8),
                 ),
                 const Spacer(),
-                Text(
-                  item['count']!,
-                  style: const TextStyle(
-                    color: Color(0xFFFFD700),
-                    fontWeight: FontWeight.w700,
-                    fontSize: 13,
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 30),
+                  child: Row(
+                    children: [
+                      Expanded(child: _Metric(value: '$activeDays', label: 'ACTIVE DAYS')),
+                      const SizedBox(width: 9),
+                      Expanded(child: _Metric(value: '$photoCount', label: 'PHOTOS')),
+                      const SizedBox(width: 9),
+                      Expanded(child: _Metric(value: '$audioCount', label: 'AUDIO')),
+                    ],
                   ),
                 ),
               ],
-            ),
-          );
-        }),
-      ],
-    );
-  }
-
-  // Slide 4: Night Owls
-  Widget _buildNightOwlsSlide() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        const Icon(Icons.nightlight_round_rounded, color: Color(0xFF9C27B0), size: 54),
-        const SizedBox(height: 16),
-        const Text(
-          'Tungi Rekordlar 🌙',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 28,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-        const SizedBox(height: 14),
-        const Text(
-          'Soat 02:00 dan 05:00 gacha jami:',
-          style: TextStyle(color: Colors.white70, fontSize: 16),
-        ),
-        const SizedBox(height: 6),
-        const Text(
-          '1,420 ta xabar',
-          style: TextStyle(
-            color: Color(0xFFFF4081),
-            fontSize: 42,
-            fontWeight: FontWeight.w900,
-          ),
-        ),
-        const SizedBox(height: 16),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-          decoration: BoxDecoration(
-            color: const Color(0x339C27B0),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0x66BA68C8)),
-          ),
-          child: const Text(
-            'Eng qizg\'in kun: 21-Fevral (1 kunda 460 ta xabar!) 🔥',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildMiniBadge(String title, String subtitle) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: const Color(0x22FFFFFF),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white12),
-      ),
-      child: Column(
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w800,
-              fontSize: 16,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.6),
-              fontSize: 11,
             ),
           ),
         ],
       ),
     );
   }
+
+  static String _formatCount(int value) {
+    final text = value.toString();
+    final out = StringBuffer();
+    for (var i = 0; i < text.length; i++) {
+      if (i > 0 && (text.length - i) % 3 == 0) out.write(',');
+      out.write(text[i]);
+    }
+    return out.toString();
+  }
+}
+
+class _Metric extends StatelessWidget {
+  final String value;
+  final String label;
+
+  const _Metric({required this.value, required this.label});
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 17),
+        decoration: BoxDecoration(
+          color: const Color(0x3812111B),
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(color: const Color(0x338E83AA)),
+        ),
+        child: Column(
+          children: [
+            Text(
+              value,
+              style: const TextStyle(
+                color: Color(0xFFE8E2F1),
+                fontSize: 22,
+                fontWeight: FontWeight.w300,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Color(0xFF9995A5),
+                fontSize: 8,
+                letterSpacing: 1.2,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      );
+}
+
+class _RecapAtmospherePainter extends CustomPainter {
+  const _RecapAtmospherePainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final bounds = Offset.zero & size;
+    canvas.drawRect(bounds, Paint()..color = const Color(0xFF08080D));
+    final upper = Rect.fromCircle(center: Offset(size.width * 0.32, size.height * 0.32), radius: size.width * 0.75);
+    final lower = Rect.fromCircle(center: Offset(size.width * 0.92, size.height * 0.86), radius: size.width * 0.72);
+    canvas.drawCircle(
+      upper.center,
+      upper.width / 2,
+      Paint()
+        ..shader = const RadialGradient(
+          colors: [Color(0x334D3F78), Color(0x16423860), Colors.transparent],
+        ).createShader(upper),
+    );
+    canvas.drawCircle(
+      lower.center,
+      lower.width / 2,
+      Paint()
+        ..shader = const RadialGradient(
+          colors: [Color(0x263A2635), Color(0x123E2B3A), Colors.transparent],
+        ).createShader(lower),
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _RecapAtmospherePainter oldDelegate) => false;
 }

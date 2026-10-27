@@ -26,15 +26,15 @@ class SerenelleDirectApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF030104),
-        primaryColor: const Color(0xFFE91E63),
+        scaffoldBackgroundColor: const Color(0xFF050509),
+        primaryColor: const Color(0xFFB8A8E0),
         colorScheme: const ColorScheme.dark(
-          primary: Color(0xFFE91E63),
-          secondary: Color(0xFFFF2A6D),
-          surface: Color(0xFF140E1B),
-          background: Color(0xFF030104),
+          primary: Color(0xFFB8A8E0),
+          secondary: Color(0xFFC89579),
+          surface: Color(0xFF111018),
+          background: Color(0xFF050509),
         ),
-        fontFamily: 'Roboto',
+        fontFamily: 'sans-serif-light',
       ),
       home: const EnchantedOrbScreen(),
     );

@@ -71,7 +71,7 @@ class _SearchBottomSheetState extends State<SearchBottomSheet> {
     return Container(
       height: MediaQuery.of(context).size.height * 0.85,
       decoration: const BoxDecoration(
-        color: Color(0xFF140E1B),
+        color: Color(0xFF09090E),
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
@@ -94,14 +94,14 @@ class _SearchBottomSheetState extends State<SearchBottomSheet> {
               controller: _controller,
               autofocus: true,
               style: const TextStyle(color: Colors.white, fontSize: 16),
-              cursorColor: const Color(0xFFFF2A6D),
+              cursorColor: const Color(0xFFB8A8E0),
               onChanged: _onSearchChanged,
               decoration: InputDecoration(
                 filled: true,
-                fillColor: const Color(0xFF22172C),
-                hintText: "14,170 ta xabardan qidirish...",
+                fillColor: const Color(0xFF14131B),
+                hintText: 'Arxivdan qidirish',
                 hintStyle: TextStyle(color: Colors.white.withOpacity(0.35)),
-                prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFFFF4081)),
+                prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFFB8A8E0)),
                 suffixIcon: _controller.text.isNotEmpty
                     ? IconButton(
                         icon: const Icon(Icons.clear_rounded, color: Colors.white54),
@@ -121,7 +121,7 @@ class _SearchBottomSheetState extends State<SearchBottomSheet> {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
-                  borderSide: const BorderSide(color: Color(0xFFFF4081), width: 1.5),
+                  borderSide: const BorderSide(color: Color(0xFF8F82B1), width: 1.2),
                 ),
               ),
             ),
@@ -165,8 +165,6 @@ class _SearchBottomSheetState extends State<SearchBottomSheet> {
                     ),
                     itemBuilder: (context, i) {
                       final item = _results[i];
-                      final isMe = item.senderName == 'Azizbek';
-
                       return ListTile(
                         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                         shape: RoundedRectangleBorder(
@@ -180,14 +178,7 @@ class _SearchBottomSheetState extends State<SearchBottomSheet> {
                         },
                         title: Row(
                           children: [
-                            Text(
-                              item.senderName,
-                              style: TextStyle(
-                                color: isMe ? const Color(0xFFFF80AB) : const Color(0xFFBA68C8),
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+                            const Text('MESSAGE', style: TextStyle(color: Color(0xFFB6A9D7), fontSize: 9, letterSpacing: 1.5)),
                             const Spacer(),
                             Text(
                               item.dateFormatted,

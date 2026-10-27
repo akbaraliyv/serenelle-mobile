@@ -20,7 +20,7 @@ class UpdateInfo {
 
 class UpdaterService {
   // Current installed app version
-  static const String currentVersion = '1.0.6';
+  static const String currentVersion = '1.0.7';
   static const MethodChannel _channel = MethodChannel('com.serenelle.direct/updater');
 
   /// Check GitHub Releases for newer version

@@ -62,10 +62,10 @@ class _EnchantedOrbScreenState extends State<EnchantedOrbScreen>
         speed: (_random.nextDouble() * 0.8 + 0.3) * (_random.nextBool() ? 1 : -1),
         size: _random.nextDouble() * 3.5 + 1.2,
         color: i % 3 == 0
-            ? const Color(0xFFFF2A6D)
+            ? const Color(0xFFC4B8E9)
             : (i % 3 == 1
-                ? const Color(0xFF00F2FE)
-                : const Color(0xFFFFD700)),
+                ? const Color(0xFF8D829F)
+                : const Color(0xFFC89579)),
         verticalRatio: _random.nextDouble() * 0.7 + 0.3,
       ));
     }
@@ -143,9 +143,10 @@ class _EnchantedOrbScreenState extends State<EnchantedOrbScreen>
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final orbSize = math.min(size.width * 0.78, 330.0);
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF030104), // Pure Deep OLED void
+      backgroundColor: const Color(0xFF050509),
       body: Stack(
         fit: StackFit.expand,
         children: [
@@ -217,6 +218,29 @@ class _EnchantedOrbScreenState extends State<EnchantedOrbScreen>
               ),
             ),
           ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: math.max(30.0, bottomInset + 18),
+            child: IgnorePointer(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(width: 28, height: 1, color: const Color(0x668D829F)),
+                  const SizedBox(height: 11),
+                  const Text(
+                    'TOUCH TO ENTER',
+                    style: TextStyle(
+                      color: Color(0xFF9B96A8),
+                      fontSize: 9,
+                      letterSpacing: 2.8,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -252,13 +276,16 @@ class _CosmicBackgroundPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width * 0.5, size.height * 0.5);
+    final center = Offset(
+      size.width * (0.5 + math.cos(angle) * 0.055),
+      size.height * (0.5 + math.sin(angle) * 0.035),
+    );
 
     final nebulaPaint = Paint()
       ..shader = RadialGradient(
         colors: [
-          Color.lerp(const Color(0x358A2387), const Color(0x50E91E63), pulseValue)!,
-          const Color(0x1500F2FE),
+          Color.lerp(const Color(0x354A3F70), const Color(0x506F578D), pulseValue)!,
+          const Color(0x152F3548),
           Colors.transparent,
         ],
         stops: const [0.0, 0.55, 1.0],
@@ -300,8 +327,8 @@ class _EnchantedOrbPainter extends CustomPainter {
     final glowPaint = Paint()
       ..shader = RadialGradient(
         colors: [
-          const Color(0x66FF2A6D).withOpacity(0.4 * alphaMultiplier),
-          const Color(0x339C27B0).withOpacity(0.2 * alphaMultiplier),
+          const Color(0x668E7CC7).withOpacity(0.38 * alphaMultiplier),
+          const Color(0x335D526D).withOpacity(0.18 * alphaMultiplier),
           Colors.transparent,
         ],
         stops: const [0.6, 0.85, 1.0],
@@ -314,9 +341,9 @@ class _EnchantedOrbPainter extends CustomPainter {
       ..shader = RadialGradient(
         center: const Alignment(-0.35, -0.35),
         colors: [
-          const Color(0xFF2E0854).withOpacity(0.85 * alphaMultiplier),
-          const Color(0xFF130026).withOpacity(0.95 * alphaMultiplier),
-          const Color(0xFF070010).withOpacity(0.98 * alphaMultiplier),
+          const Color(0xFF2A243A).withOpacity(0.9 * alphaMultiplier),
+          const Color(0xFF13121C).withOpacity(0.97 * alphaMultiplier),
+          const Color(0xFF08090D).withOpacity(0.99 * alphaMultiplier),
         ],
         stops: const [0.0, 0.65, 1.0],
       ).createShader(Rect.fromCircle(center: center, radius: currentRadius));
@@ -338,23 +365,29 @@ class _EnchantedOrbPainter extends CustomPainter {
       canvas.drawCircle(Offset(px, py), p.size * (1.0 + charge * 0.5), pPaint);
     }
 
-    // 4. Center Glowing Twin Rings (Ethereal Symbol)
+    // 4. Abstract optical aperture, avoiding a heart-like twin-ring silhouette.
     final ringPaint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.2 + charge * 2.0
       ..shader = SweepGradient(
         colors: [
-          const Color(0xFFFF2A6D).withOpacity(alphaMultiplier),
-          const Color(0xFF00F2FE).withOpacity(alphaMultiplier),
-          const Color(0xFFFFD700).withOpacity(alphaMultiplier),
-          const Color(0xFFFF2A6D).withOpacity(alphaMultiplier),
+          const Color(0xFFC5B7EA).withOpacity(alphaMultiplier),
+          const Color(0xFF8D829F).withOpacity(alphaMultiplier),
+          const Color(0xFFC89579).withOpacity(alphaMultiplier),
+          const Color(0xFFC5B7EA).withOpacity(alphaMultiplier),
         ],
         transform: GradientRotation(time),
       ).createShader(Rect.fromCircle(center: center, radius: 45));
 
-    final rOffset = 16.0;
-    canvas.drawCircle(center.translate(-rOffset, 0), 22, ringPaint);
-    canvas.drawCircle(center.translate(rOffset, 0), 22, ringPaint);
+    canvas.drawCircle(center, currentRadius * 0.2, ringPaint);
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+    canvas.rotate(time * 0.22);
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset.zero, width: currentRadius * 0.52, height: currentRadius * 0.3),
+      ringPaint..strokeWidth = 1.1 + charge * 0.8,
+    );
+    canvas.restore();
 
     // 5. Crystal Specular Glare / Highlight (Upper-Left Reflection)
     final glarePaint = Paint()
@@ -375,10 +408,10 @@ class _EnchantedOrbPainter extends CustomPainter {
       ..strokeWidth = 1.6 + charge * 2.5
       ..shader = SweepGradient(
         colors: [
-          const Color(0xFF00F2FE).withOpacity(0.8 * alphaMultiplier),
-          const Color(0xFFFF2A6D).withOpacity(0.9 * alphaMultiplier),
-          const Color(0xFFFFD700).withOpacity(0.7 * alphaMultiplier),
-          const Color(0xFF00F2FE).withOpacity(0.8 * alphaMultiplier),
+          const Color(0xFFB9AFE0).withOpacity(0.82 * alphaMultiplier),
+          const Color(0xFF7F718E).withOpacity(0.72 * alphaMultiplier),
+          const Color(0xFFC89579).withOpacity(0.66 * alphaMultiplier),
+          const Color(0xFFB9AFE0).withOpacity(0.82 * alphaMultiplier),
         ],
         transform: GradientRotation(-time * 0.6),
       ).createShader(Rect.fromCircle(center: center, radius: currentRadius));
@@ -390,7 +423,7 @@ class _EnchantedOrbPainter extends CustomPainter {
       final shockwavePaint = Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = (1.0 - burst) * 12.0
-        ..color = const Color(0xFFFF2A6D).withOpacity((1.0 - burst).clamp(0.0, 1.0));
+        ..color = const Color(0xFFC5B7EA).withOpacity((1.0 - burst).clamp(0.0, 1.0));
 
       canvas.drawCircle(center, currentRadius * 1.5 * burst, shockwavePaint);
     }

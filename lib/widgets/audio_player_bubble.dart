@@ -94,7 +94,7 @@ class _AudioPlayerBubbleState extends State<AudioPlayerBubble> {
               decoration: const BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: LinearGradient(
-                  colors: [Color(0xFFFF4081), Color(0xFFE040FB)],
+                  colors: [Color(0xFF8C7EA9), Color(0xFFC89579)],
                 ),
               ),
               child: Icon(
@@ -129,7 +129,7 @@ class _AudioPlayerBubbleState extends State<AudioPlayerBubble> {
                       height: barHeights[i % barHeights.length].toDouble(),
                       decoration: BoxDecoration(
                         color: isPlayed
-                            ? const Color(0xFFFF4081)
+                            ? const Color(0xFFC3B5E0)
                             : Colors.white.withOpacity(0.35),
                         borderRadius: BorderRadius.circular(2),
                       ),
