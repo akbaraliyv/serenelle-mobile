@@ -30,11 +30,21 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Setup Android Platform Scaffold
+      - name: Generate Clean Android Scaffold
         run: |
           cp pubspec.yaml pubspec.backup.yaml
+          rm -rf android
           flutter create --project-name serenelle_direct --org com.serenelle --platforms android .
           cp pubspec.backup.yaml pubspec.yaml
+
+      - name: Configure Android Permissions & MinSdkVersion
+        run: |
+          # Ensure minSdkVersion 21 for just_audio and sqflite
+          sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 21/g' android/app/build.gradle || true
+          sed -i 's/minSdk = flutter.minSdkVersion/minSdk = 21/g' android/app/build.gradle || true
+          
+          # Add internet and vibrate permissions
+          sed -i '/<application/i \    <uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.VIBRATE"/>' android/app/src/main/AndroidManifest.xml
 
       - name: Install Dependencies
         run: flutter pub get
