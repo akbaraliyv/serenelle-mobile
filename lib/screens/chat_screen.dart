@@ -97,6 +97,7 @@ class _ChatScreenState extends State<ChatScreen> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => SearchBottomSheet(
+        allMessages: _messages,
         onSelectResult: (index, id) => _scrollToIndex(index, highlightId: id),
       ),
     );

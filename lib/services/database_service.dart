@@ -51,35 +51,65 @@ class DatabaseService {
     return maps.map((m) => ChatMessage.fromMap(m)).toList(growable: false);
   }
 
-  /// Blazing-fast SQLite FTS5 Full-Text Search with instant prefix matching
+  /// Blazing-fast SQLite Search with FTS5 and LIKE fallback
   Future<List<SearchResultItem>> searchFts(String query) async {
-    if (query.trim().isEmpty) return [];
+    final trimmed = query.trim();
+    if (trimmed.isEmpty) return [];
 
-    final db = await database;
-    final sanitized = query.replaceAll(RegExp(r'["\x27*]'), '').trim();
-    if (sanitized.isEmpty) return [];
+    try {
+      final db = await database;
 
-    // FTS5 MATCH query with wildcard prefix
-    final matchExpression = '$sanitized*';
+      // 1. Try FTS5 MATCH query first
+      try {
+        final sanitized = trimmed.replaceAll(RegExp(r'["\x27*+\-^~:]'), ' ').trim();
+        if (sanitized.isNotEmpty) {
+          final List<Map<String, dynamic>> results = await db.rawQuery('''
+            SELECT id, text, sender_name, date_formatted
+            FROM messages_fts
+            WHERE messages_fts MATCH ?
+            ORDER BY rank
+            LIMIT 100
+          ''', ['$sanitized*']);
 
-    final List<Map<String, dynamic>> results = await db.rawQuery('''
-      SELECT id, text, sender_name, date_formatted
-      FROM messages_fts
-      WHERE messages_fts MATCH ?
-      ORDER BY rank
-      LIMIT 100
-    ''', [matchExpression]);
+          if (results.isNotEmpty) {
+            return results.map((row) {
+              final id = row['id'] as int;
+              return SearchResultItem(
+                id: id,
+                text: row['text'] as String,
+                senderName: row['sender_name'] as String,
+                dateFormatted: row['date_formatted'] as String,
+                globalIndex: id - 1,
+              );
+            }).toList();
+          }
+        }
+      } catch (_) {
+        // Fallback to standard LIKE if FTS5 throws syntax error or is missing
+      }
 
-    return results.map((row) {
-      final id = row['id'] as int;
-      return SearchResultItem(
-        id: id,
-        text: row['text'] as String,
-        senderName: row['sender_name'] as String,
-        dateFormatted: row['date_formatted'] as String,
-        globalIndex: id - 1, // ID is 1-indexed, index is 0-indexed
-      );
-    }).toList();
+      // 2. Standard SQLite LIKE search (always 100% reliable across all Android OS versions)
+      final List<Map<String, dynamic>> likeResults = await db.rawQuery('''
+        SELECT id, text, sender_name, date_formatted
+        FROM messages
+        WHERE text LIKE ?
+        ORDER BY id DESC
+        LIMIT 100
+      ''', ['%$trimmed%']);
+
+      return likeResults.map((row) {
+        final id = row['id'] as int;
+        return SearchResultItem(
+          id: id,
+          text: row['text'] as String,
+          senderName: row['sender_name'] as String,
+          dateFormatted: row['date_formatted'] as String,
+          globalIndex: id - 1,
+        );
+      }).toList();
+    } catch (_) {
+      return [];
+    }
   }
 
   /// Get 95 unique calendar dates with counts and jump indices

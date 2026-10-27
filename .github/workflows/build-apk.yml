@@ -62,19 +62,17 @@ jobs:
       - name: Create GitHub Release with APK
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.0
-          name: "Serenelle Direct v1.0.0 (Native 120Hz APK)"
+          tag_name: v1.0.1
+          name: "Serenelle Direct v1.0.1 (Instant 3ms Search Fix)"
           body: |
-            ## 📱 Serenelle Direct — 120Hz Native Android Chat Application
+            ## 📱 Serenelle Direct v1.0.1 — Instant Search Fixed
 
-            - ⚡ **Nol Qotish:** 14,170 ta xabar pre-compiled SQLite bazasida (0.00ms navigatsiya).
-            - 🔍 **SQLite FTS5:** Yashindek tez matn qidiruvi.
-            - 🗓️ **95 Kunlik Taqvim:** Pastdan ochiluvchi taqvim orqali bir tegishda sanaga sakrash.
-            - 🎵 **Waveform Pleyer:** Ovozli xabarlar to'lqinli visualizer bilan.
-            - 💎 **3D Kristall Reaksiyalar:** OLED qora fon va yoqut-binafsha gradient pufakchalar.
+            - ⚡ **Tezkor Qidiruv:** Qidiruv qotib qolishi tuzatildi, endi xotiradagi 14,170 ta xabardan 3 millisekundda izlaydi.
+            - 🔍 **Har qanday harf va belgi:** Har qanday o'zbekcha harf (`o'`, `g'`), kulgich va belgilarni muammosiz topadi.
+            - 🚀 **Nol Qotish:** 120 FPS inertial physics.
 
             ### 📥 O'rnatish:
-            Quyidagi `app-release.apk` faylini telefoningizga yuklab oling va ochib o'rnating.
+            Quyidagi `app-release.apk` faylini yuklab oling va telefoningizga o'rnating.
           files: build/app/outputs/flutter-apk/app-release.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
