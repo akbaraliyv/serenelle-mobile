@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:math' as math;
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
@@ -13,9 +12,8 @@ import '../widgets/image_viewer.dart';
 import '../widgets/direct_wrapped_modal.dart';
 import '../widgets/media_gallery_modal.dart';
 import '../services/updater_service.dart';
-import 'enchanted_orb_screen.dart';
 
-enum _ArchiveAction { search, dates, media, random, recap, portal, top, latest, update }
+enum _ArchiveAction { search, dates, media, random, recap, top, latest, update }
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -33,35 +31,23 @@ class _AuroraBackdrop extends StatefulWidget {
   State<_AuroraBackdrop> createState() => _AuroraBackdropState();
 }
 
-class _AuroraBackdropState extends State<_AuroraBackdrop>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _motion = AnimationController(
-    vsync: this,
-    duration: const Duration(seconds: 18),
-  )..repeat();
-  @override
-  void dispose() {
-    _motion.dispose();
-    super.dispose();
-  }
-
+class _AuroraBackdropState extends State<_AuroraBackdrop> {
   @override
   Widget build(BuildContext context) => RepaintBoundary(
         child: AnimatedBuilder(
-          animation: Listenable.merge([_motion, widget.touch, widget.energy]),
+          animation: Listenable.merge([widget.touch, widget.energy]),
           builder: (context, _) => CustomPaint(
             size: Size.infinite,
-            painter: _AuroraPainter(_motion.value, widget.touch.value, widget.energy.value),
+            painter: _AuroraPainter(widget.touch.value, widget.energy.value),
           ),
         ),
       );
 }
 
 class _AuroraPainter extends CustomPainter {
-  final double phase;
   final Offset touch;
   final double energy;
-  const _AuroraPainter(this.phase, this.touch, this.energy);
+  const _AuroraPainter(this.touch, this.energy);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -77,14 +63,15 @@ class _AuroraPainter extends CustomPainter {
           stops: [0, 0.52, 1],
         ).createShader(bounds),
     );
-    final wave = math.sin(phase * math.pi * 2);
     final energyLift = energy.clamp(0.0, 1.0).toDouble();
     final center = Offset(size.width * (0.5 + (touch.dx - 0.5) * 0.12),
         size.height * (0.48 + (touch.dy - 0.5) * 0.08));
     final colors = const [Color(0xFF5421A8), Color(0xFFB11A83), Color(0xFFFF654F)];
     for (var i = 0; i < 3; i++) {
-      final c = Offset(center.dx + math.sin(wave + i * 2.1) * size.width * 0.16,
-          size.height * (0.18 + i * 0.34) + math.cos(wave + i) * 24);
+      final c = Offset(
+        center.dx + (i - 1) * size.width * 0.16 + (touch.dx - .5) * 18,
+        size.height * (0.18 + i * 0.34) + (touch.dy - .5) * 16,
+      );
       final rect = Rect.fromCenter(
         center: c,
         width: size.width * (1.15 + energyLift * 0.14),
@@ -93,7 +80,7 @@ class _AuroraPainter extends CustomPainter {
       final paint = Paint()
         ..shader = RadialGradient(colors: [colors[i].withOpacity(0.18 + energyLift * 0.08), colors[i].withOpacity(0.045), Colors.transparent], stops: const [0, 0.48, 1])
             .createShader(rect)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 48);
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 28);
       canvas.drawOval(rect, paint);
     }
     final starPaint = Paint()..color = Colors.white.withOpacity(0.26);
@@ -106,7 +93,7 @@ class _AuroraPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _AuroraPainter oldDelegate) =>
-      oldDelegate.phase != phase || oldDelegate.touch != touch || oldDelegate.energy != energy;
+      oldDelegate.touch != touch || oldDelegate.energy != energy;
 }
 
 class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateMixin {
@@ -124,6 +111,7 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
   Timer? _scrollEndTimer;
   double _scrollTilt = 0.0;
   double _lastScrollPixels = 0.0;
+  DateTime _lastVisualFrame = DateTime.fromMillisecondsSinceEpoch(0);
   final ValueNotifier<Offset> _ambientTouch = ValueNotifier(const Offset(0.5, 0.5));
   final ValueNotifier<double> _scrollEnergy = ValueNotifier(0.0);
 
@@ -307,17 +295,6 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
     _scrollToIndex(randomIdx, highlightId: msg.id);
   }
 
-  void _openEnchantedOrb() {
-    HapticFeedback.selectionClick();
-    Navigator.of(context).push(
-      PageRouteBuilder(
-        transitionDuration: const Duration(milliseconds: 600),
-        pageBuilder: (_, __, ___) => const EnchantedOrbScreen(returnToChatOnClose: true),
-        transitionsBuilder: (_, a, __, c) => FadeTransition(opacity: a, child: c),
-      ),
-    );
-  }
-
   void _manualCheckUpdate() async {
     HapticFeedback.lightImpact();
     ScaffoldMessenger.of(context).showSnackBar(
@@ -357,9 +334,6 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
         break;
       case _ArchiveAction.recap:
         _openDirectWrapped();
-        break;
-      case _ArchiveAction.portal:
-        _openEnchantedOrb();
         break;
       case _ArchiveAction.top:
         _scrollToTop();
@@ -432,9 +406,14 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
                   final delta = notification.metrics.pixels - _lastScrollPixels;
                   _lastScrollPixels = notification.metrics.pixels;
                   final tilt = (delta / 1800).clamp(-0.012, 0.012).toDouble();
-                  _scrollEnergy.value = (delta.abs() / 38).clamp(0.0, 1.0).toDouble();
-                  if ((tilt - _scrollTilt).abs() > 0.001) {
-                    setState(() => _scrollTilt = tilt);
+                  final now = DateTime.now();
+                  if (now.difference(_lastVisualFrame).inMilliseconds >= 32) {
+                    _lastVisualFrame = now;
+                    _scrollEnergy.value =
+                        (delta.abs() / 38).clamp(0.0, 1.0).toDouble();
+                    if ((tilt - _scrollTilt).abs() > 0.002) {
+                      setState(() => _scrollTilt = tilt);
+                    }
                   }
                 }
                 return false;
@@ -571,7 +550,6 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
             PopupMenuItem(value: _ArchiveAction.recap, child: Text('Arxiv ko‘rsatkichi')),
             PopupMenuItem(value: _ArchiveAction.top, child: Text('Boshiga o‘tish')),
             PopupMenuItem(value: _ArchiveAction.latest, child: Text('Eng yangisiga o‘tish')),
-            PopupMenuItem(value: _ArchiveAction.portal, child: Text('Kirish portali')),
             PopupMenuItem(value: _ArchiveAction.update, child: Text('Yangilanishni tekshirish')),
           ],
         ),

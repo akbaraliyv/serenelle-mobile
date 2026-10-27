@@ -65,14 +65,14 @@ jobs:
       - name: Create GitHub Release with APK
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.10
-          name: "Serenelle Direct v1.0.10 — Automatic Updates"
+          tag_name: v1.0.11
+          name: "Serenelle Direct v1.0.11 — Smooth Signal Chamber"
           body: |
-            ## Version 1.0.10
+            ## Version 1.0.11
 
-            - Ilova ochilganda yangi versiya avtomatik yuklanadi.
-            - Yuklash tugagach Android o'rnatish oynasi avtomatik ochiladi.
-            - Xatolik bo'lsa yangilash oynasidan qayta yuklash mumkin.
+            - Kirish portali olib tashlandi: ilova chatni to'g'ridan-to'g'ri ochadi.
+            - Doimiy fon animatsiyasi va xabarlar ortidagi blur olib tashlandi.
+            - Scroll vizual yangilanishlari cheklanib, uzoq arxiv ancha silliq ishlaydi.
 
             ### 📥 O'rnatish:
             Quyidagi `app-release.apk` faylini yuklab oling va telefoningizga o'rnating. Kelgusi barcha yangilanishlar ilova ichidan avtomatik amalga oshadi!

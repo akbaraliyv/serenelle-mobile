@@ -1,4 +1,3 @@
-import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/chat_message.dart';
@@ -161,11 +160,18 @@ class ChatBubble extends StatelessWidget {
                 ? _ViewportLiquidGradient(radius: bubbleRadius)
                 : const ColoredBox(color: Color(0x8808090E)),
           ),
+          // Layered tint keeps the obsidian depth without a costly backdrop
+          // blur for every visible message during a long archive scroll.
           if (!isMe)
-            Positioned.fill(
-              child: BackdropFilter(
-                filter: ui.ImageFilter.blur(sigmaX: 11, sigmaY: 11),
-                child: const ColoredBox(color: Color(0x440E0D15)),
+            const Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0x660E0D17), Color(0x24030307)],
+                  ),
+                ),
               ),
             ),
           Positioned.fill(

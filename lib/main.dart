@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'screens/enchanted_orb_screen.dart';
+import 'screens/chat_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,7 +36,8 @@ class SerenelleDirectApp extends StatelessWidget {
         ),
         fontFamily: 'sans-serif-light',
       ),
-      home: const EnchantedOrbScreen(),
+      // The archive opens directly; the signal chamber itself is the entrance.
+      home: const ChatScreen(),
     );
   }
 }
