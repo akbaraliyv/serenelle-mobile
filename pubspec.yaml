@@ -1,0 +1,29 @@
+name: serenelle_direct
+description: "Ultra-fast 120Hz Native Instagram Direct Chat Archive with 14,170 messages"
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  sqflite: ^2.3.3+1
+  path: ^1.9.0
+  path_provider: ^2.1.2
+  scrollable_positioned_list: ^0.3.8
+  just_audio: ^0.9.36
+  intl: ^0.19.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/database/chat.db
+    - assets/media/photos/
+    - assets/media/audio/

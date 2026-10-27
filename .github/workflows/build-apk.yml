@@ -1,0 +1,70 @@
+name: Build Android Release APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build Flutter APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.3'
+          channel: 'stable'
+          cache: true
+
+      - name: Setup Android Platform Scaffold
+        run: |
+          cp pubspec.yaml pubspec.backup.yaml
+          flutter create --project-name serenelle_direct --org com.serenelle --platforms android .
+          cp pubspec.backup.yaml pubspec.yaml
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Build Release APK
+        run: flutter build apk --release --split-per-abi=false
+
+      - name: Upload APK to Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: serenelle-direct-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 30
+
+      - name: Create GitHub Release with APK
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.0
+          name: "Serenelle Direct v1.0.0 (Native 120Hz APK)"
+          body: |
+            ## 📱 Serenelle Direct — 120Hz Native Android Chat Application
+
+            - ⚡ **Nol Qotish:** 14,170 ta xabar pre-compiled SQLite bazasida (0.00ms navigatsiya).
+            - 🔍 **SQLite FTS5:** Yashindek tez matn qidiruvi.
+            - 🗓️ **95 Kunlik Taqvim:** Pastdan ochiluvchi taqvim orqali bir tegishda sanaga sakrash.
+            - 🎵 **Waveform Pleyer:** Ovozli xabarlar to'lqinli visualizer bilan.
+            - 💎 **3D Kristall Reaksiyalar:** OLED qora fon va yoqut-binafsha gradient pufakchalar.
+
+            ### 📥 O'rnatish:
+            Quyidagi `app-release.apk` faylini telefoningizga yuklab oling va ochib o'rnating.
+          files: build/app/outputs/flutter-apk/app-release.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
