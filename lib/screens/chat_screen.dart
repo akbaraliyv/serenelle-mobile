@@ -337,7 +337,7 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Sizda eng so\'nggi versiya (v1.0.5) o\'rnatilgan!'),
+          content: Text('Sizda eng so\'nggi versiya (v1.0.6) o\'rnatilgan!'),
           backgroundColor: Color(0xFF2E7D32),
           duration: Duration(seconds: 2),
         ),

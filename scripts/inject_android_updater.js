@@ -1,13 +1,17 @@
 const fs = require('fs');
 const path = require('path');
 
-// 1. Copy MainActivity.kt
-const kotlinDir = path.join('android', 'app', 'src', 'main', 'kotlin', 'com', 'serenelle', 'direct');
+// 1. Copy MainActivity.kt into the generated Android namespace package.
+const gradlePath = path.join('android', 'app', 'build.gradle');
+const gradle = fs.readFileSync(gradlePath, 'utf8');
+const namespaceMatch = gradle.match(/namespace\s+["']([^"']+)["']/);
+if (!namespaceMatch) throw new Error('Android namespace not found in app/build.gradle');
+const namespace = namespaceMatch[1];
+const kotlinDir = path.join('android', 'app', 'src', 'main', 'kotlin', ...namespace.split('.'));
 fs.mkdirSync(kotlinDir, { recursive: true });
-fs.copyFileSync(
-  path.join('android_updater_files', 'MainActivity.kt'),
-  path.join(kotlinDir, 'MainActivity.kt')
-);
+const activity = fs.readFileSync(path.join('android_updater_files', 'MainActivity.kt'), 'utf8')
+  .replace(/^package\s+[\w.]+/m, `package ${namespace}`);
+fs.writeFileSync(path.join(kotlinDir, 'MainActivity.kt'), activity, 'utf8');
 console.log('Injected MainActivity.kt');
 
 // 2. Copy file_paths.xml
@@ -53,11 +57,11 @@ fs.writeFileSync(manifestPath, manifest, 'utf8');
 console.log('Updated AndroidManifest.xml with FileProvider and REQUEST_INSTALL_PACKAGES');
 
 // 4. Update build.gradle for minSdkVersion 21
-const gradlePath = path.join('android', 'app', 'build.gradle');
-if (fs.existsSync(gradlePath)) {
-  let gradle = fs.readFileSync(gradlePath, 'utf8');
-  gradle = gradle.replace(/minSdkVersion\s+flutter\.minSdkVersion/g, 'minSdkVersion 21');
-  gradle = gradle.replace(/minSdk\s*=\s*flutter\.minSdkVersion/g, 'minSdk = 21');
-  fs.writeFileSync(gradlePath, gradle, 'utf8');
+const appGradlePath = path.join('android', 'app', 'build.gradle');
+if (fs.existsSync(appGradlePath)) {
+  let appGradle = fs.readFileSync(appGradlePath, 'utf8');
+  appGradle = appGradle.replace(/minSdkVersion\s+flutter\.minSdkVersion/g, 'minSdkVersion 21');
+  appGradle = appGradle.replace(/minSdk\s*=\s*flutter\.minSdkVersion/g, 'minSdk = 21');
+  fs.writeFileSync(appGradlePath, appGradle, 'utf8');
   console.log('Configured minSdkVersion 21 in build.gradle');
 }
