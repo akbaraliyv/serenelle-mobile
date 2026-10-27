@@ -160,8 +160,6 @@ class ChatBubble extends StatelessWidget {
       );
     }
 
-    final isMe = message.isMe;
-
     return Container(
       constraints: BoxConstraints(
         maxWidth: MediaQuery.of(context).size.width * 0.76,
