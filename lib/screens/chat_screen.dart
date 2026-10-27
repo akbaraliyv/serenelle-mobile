@@ -7,6 +7,7 @@ import '../widgets/chat_bubble.dart';
 import '../widgets/search_bottom_sheet.dart';
 import '../widgets/date_filter_modal.dart';
 import '../widgets/image_viewer.dart';
+import '../services/updater_service.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -45,6 +46,15 @@ class _ChatScreenState extends State<ChatScreen> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (_messages.isNotEmpty && _itemScrollController.isAttached) {
           _itemScrollController.jumpTo(index: _messages.length - 1);
+        }
+      });
+
+      // Silently check for newer version on startup
+      Future.delayed(const Duration(seconds: 2), () async {
+        if (!mounted) return;
+        final update = await UpdaterService.checkUpdate();
+        if (update != null && mounted) {
+          UpdaterService.showUpdatePrompt(context, update);
         }
       });
     }
@@ -114,6 +124,29 @@ class _ChatScreenState extends State<ChatScreen> {
         onSelectDate: (firstIndex, firstId) => _scrollToIndex(firstIndex, highlightId: firstId),
       ),
     );
+  }
+
+  void _manualCheckUpdate() async {
+    HapticFeedback.lightImpact();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Yangilanishlar tekshirilmoqda...'),
+        duration: Duration(seconds: 1),
+      ),
+    );
+    final update = await UpdaterService.checkUpdate();
+    if (!mounted) return;
+    if (update != null) {
+      UpdaterService.showUpdatePrompt(context, update);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Sizda eng so\'nggi versiya (v1.0.2) o\'rnatilgan!'),
+          backgroundColor: Color(0xFF2E7D32),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
   }
 
   @override
@@ -290,6 +323,11 @@ class _ChatScreenState extends State<ChatScreen> {
         ],
       ),
       actions: [
+        IconButton(
+          icon: const Icon(Icons.system_update_alt_rounded, color: Color(0xFFFF80AB)),
+          tooltip: 'Yangilanishlarni tekshirish',
+          onPressed: _manualCheckUpdate,
+        ),
         IconButton(
           icon: const Icon(Icons.calendar_month_rounded, color: Colors.white),
           tooltip: 'Sanalar filtri',
