@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'screens/chat_screen.dart';
+import 'screens/enchanted_orb_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,7 +36,7 @@ class SerenelleDirectApp extends StatelessWidget {
         ),
         fontFamily: 'Roboto',
       ),
-      home: const ChatScreen(),
+      home: const EnchantedOrbScreen(),
     );
   }
 }

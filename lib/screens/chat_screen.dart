@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
@@ -7,7 +9,10 @@ import '../widgets/chat_bubble.dart';
 import '../widgets/search_bottom_sheet.dart';
 import '../widgets/date_filter_modal.dart';
 import '../widgets/image_viewer.dart';
+import '../widgets/direct_wrapped_modal.dart';
+import '../widgets/media_gallery_modal.dart';
 import '../services/updater_service.dart';
+import 'enchanted_orb_screen.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -16,7 +21,7 @@ class ChatScreen extends StatefulWidget {
   State<ChatScreen> createState() => _ChatScreenState();
 }
 
-class _ChatScreenState extends State<ChatScreen> {
+class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateMixin {
   final ItemScrollController _itemScrollController = ItemScrollController();
   final ItemPositionsListener _itemPositionsListener = ItemPositionsListener.create();
 
@@ -25,10 +30,56 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _isLoading = true;
   int? _highlightedId;
 
+  // Dynamic Island Floating Date & Liquid Velocity Tilt
+  String _currentFloatingDate = '';
+  bool _isScrolling = false;
+  Timer? _scrollEndTimer;
+  double _scrollTilt = 0.0;
+
   @override
   void initState() {
     super.initState();
     _loadData();
+    _setupScrollListener();
+  }
+
+  void _setupScrollListener() {
+    _itemPositionsListener.itemPositions.addListener(() {
+      final positions = _itemPositionsListener.itemPositions.value;
+      if (positions.isNotEmpty && _messages.isNotEmpty) {
+        int minIndex = positions
+            .where((p) => p.itemTrailingEdge > 0)
+            .map((p) => p.index)
+            .fold(positions.first.index, math.min);
+
+        if (minIndex >= 0 && minIndex < _messages.length) {
+          final date = _messages[minIndex].dateFormatted;
+          if (date != _currentFloatingDate || !_isScrolling) {
+            setState(() {
+              _currentFloatingDate = date;
+              _isScrolling = true;
+              _scrollTilt = 0.015; // Subtle 1 degree liquid velocity tilt
+            });
+
+            _scrollEndTimer?.cancel();
+            _scrollEndTimer = Timer(const Duration(milliseconds: 900), () {
+              if (mounted) {
+                setState(() {
+                  _isScrolling = false;
+                  _scrollTilt = 0.0;
+                });
+              }
+            });
+          }
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollEndTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadData() async {
@@ -126,6 +177,69 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+  void _openDirectWrapped() {
+    HapticFeedback.mediumImpact();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const DirectWrappedModal(),
+    );
+  }
+
+  void _openMediaGallery() {
+    HapticFeedback.selectionClick();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => MediaGalleryModal(
+        allMessages: _messages,
+        onSelectMessage: (index, id) => _scrollToIndex(index, highlightId: id),
+      ),
+    );
+  }
+
+  void _jumpToRandomMemory() {
+    if (_messages.isEmpty) return;
+    HapticFeedback.heavyImpact();
+    final randomIdx = math.Random().nextInt(_messages.length);
+    final msg = _messages[randomIdx];
+    _scrollToIndex(randomIdx, highlightId: msg.id);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Text('🎲', style: TextStyle(fontSize: 18)),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                '${msg.dateFormatted} lahzasiga sakraldi!',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: const Color(0xFFE91E63),
+        duration: const Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+  }
+
+  void _openEnchantedOrb() {
+    HapticFeedback.selectionClick();
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        transitionDuration: const Duration(milliseconds: 600),
+        pageBuilder: (_, __, ___) => const EnchantedOrbScreen(returnToChatOnClose: true),
+        transitionsBuilder: (_, a, __, c) => FadeTransition(opacity: a, child: c),
+      ),
+    );
+  }
+
   void _manualCheckUpdate() async {
     HapticFeedback.lightImpact();
     ScaffoldMessenger.of(context).showSnackBar(
@@ -141,7 +255,7 @@ class _ChatScreenState extends State<ChatScreen> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Sizda eng so\'nggi versiya (v1.0.2) o\'rnatilgan!'),
+          content: Text('Sizda eng so\'nggi versiya (v1.0.3) o\'rnatilgan!'),
           backgroundColor: Color(0xFF2E7D32),
           duration: Duration(seconds: 2),
         ),
@@ -186,7 +300,7 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           ),
 
-          // Main 120Hz Virtualized List
+          // Main 120Hz Virtualized List with Liquid Velocity Tilt
           if (_isLoading)
             const Center(
               child: Column(
@@ -213,33 +327,92 @@ class _ChatScreenState extends State<ChatScreen> {
               itemBuilder: (context, index) {
                 final message = _messages[index];
 
-                // Check if date changed from previous message
                 final bool showDateHeader = index == 0 ||
                     _messages[index - 1].isoDate != message.isoDate;
 
                 return Column(
                   children: [
                     if (showDateHeader) _buildDateDivider(message.dateFormatted),
-                    ChatBubble(
-                      message: message,
-                      isHighlighted: message.id == _highlightedId,
-                      onOpenImage: message.imageName != null
-                          ? () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => ImageViewerScreen(
-                                    imageName: message.imageName!,
+                    Transform(
+                      alignment: Alignment.center,
+                      transform: Matrix4.rotationZ(_scrollTilt * (message.isMe ? 1 : -1)),
+                      child: ChatBubble(
+                        message: message,
+                        isHighlighted: message.id == _highlightedId,
+                        onOpenImage: message.imageName != null
+                            ? () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => ImageViewerScreen(
+                                      imageName: message.imageName!,
+                                    ),
                                   ),
-                                ),
-                              );
-                            }
-                          : null,
+                                );
+                              }
+                            : null,
+                      ),
                     ),
                   ],
                 );
               },
             ),
+
+          // Floating Dynamic Island Date Capsule (Visible while scrolling)
+          Positioned(
+            top: 10,
+            left: 0,
+            right: 0,
+            child: AnimatedOpacity(
+              opacity: _isScrolling && _currentFloatingDate.isNotEmpty ? 1.0 : 0.0,
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeOut,
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+                  decoration: BoxDecoration(
+                    color: const Color(0xE61E1428),
+                    borderRadius: BorderRadius.circular(22),
+                    border: Border.all(
+                      color: const Color(0x66FF2A6D),
+                      width: 1.2,
+                    ),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x55000000),
+                        blurRadius: 16,
+                        offset: Offset(0, 4),
+                      ),
+                      BoxShadow(
+                        color: Color(0x33FF2A6D),
+                        blurRadius: 10,
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.calendar_today_rounded,
+                        color: Color(0xFFFF4081),
+                        size: 13,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        _currentFloatingDate,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
 
           // Floating Safe-Area Jump Dock
           Positioned(
@@ -258,83 +431,128 @@ class _ChatScreenState extends State<ChatScreen> {
       backgroundColor: const Color(0xE60D0914), // Glassmorphic header
       elevation: 0,
       scrolledUnderElevation: 0,
-      titleSpacing: 10,
+      titleSpacing: 8,
       title: Row(
         children: [
-          // Story Gradient Avatar
-          Container(
-            padding: const EdgeInsets.all(2.2),
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                colors: [Color(0xFFFBAA47), Color(0xFFD91A46), Color(0xFFA60F93)],
-              ),
-            ),
+          // Story Gradient Avatar (Tap to open Direct Wrapped 2025!)
+          GestureDetector(
+            onTap: _openDirectWrapped,
             child: Container(
-              width: 36,
-              height: 36,
+              padding: const EdgeInsets.all(2.5),
               decoration: const BoxDecoration(
                 shape: BoxShape.circle,
-                color: Color(0xFF140E1B),
+                gradient: LinearGradient(
+                  colors: [Color(0xFFFBAA47), Color(0xFFD91A46), Color(0xFFA60F93)],
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Color(0x66D91A46),
+                    blurRadius: 8,
+                  ),
+                ],
               ),
-              alignment: Alignment.center,
-              child: const Text(
-                's',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
+              child: Container(
+                width: 36,
+                height: 36,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Color(0xFF140E1B),
+                ),
+                alignment: Alignment.center,
+                child: const Text(
+                  's',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
                 ),
               ),
             ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 8),
 
-          // Name & Verification Badge
+          // Name, Verification Badge & Wrapped trigger
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Row(
-                  children: [
-                    Text(
-                      'serenelle.',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 15.5,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: -0.3,
+            child: GestureDetector(
+              onTap: _openDirectWrapped,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Text(
+                        'serenelle.',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: -0.3,
+                        ),
                       ),
-                    ),
-                    SizedBox(width: 4),
-                    Icon(Icons.verified_rounded, color: Color(0xFF1E88E5), size: 14),
-                  ],
-                ),
-                Text(
-                  '_sserenelle • 14,170 ta xabar',
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.4),
-                    fontSize: 11,
+                      const SizedBox(width: 4),
+                      const Icon(Icons.verified_rounded, color: Color(0xFF1E88E5), size: 13),
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFFE91E63), Color(0xFFFF9800)],
+                          ),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Text(
+                          'Wrapped ✨',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
+                  Text(
+                    '14,170 xabar • Stories ni ko\'ring',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.5),
+                      fontSize: 10.5,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
       ),
       actions: [
+        // 🔮 Sehrli Kristall Shar (Reopen Enchanted Orb)
         IconButton(
-          icon: const Icon(Icons.system_update_alt_rounded, color: Color(0xFFFF80AB)),
-          tooltip: 'Yangilanishlarni tekshirish',
-          onPressed: _manualCheckUpdate,
+          icon: const Icon(Icons.auto_awesome_rounded, color: Color(0xFFFFD700), size: 21),
+          tooltip: 'Sehrli Kristall Shar',
+          onPressed: _openEnchantedOrb,
         ),
+        // 🎲 Tasodifiy Xotira Ruletkasi (Random Memory Roulette)
         IconButton(
-          icon: const Icon(Icons.calendar_month_rounded, color: Colors.white),
+          icon: const Icon(Icons.casino_rounded, color: Color(0xFF00F2FE), size: 21),
+          tooltip: 'Tasodifiy Lahza Ruletkasi',
+          onPressed: _jumpToRandomMemory,
+        ),
+        // 📸 Mediateka & Xotiralar (No bottom bar clutter!)
+        IconButton(
+          icon: const Icon(Icons.photo_library_rounded, color: Color(0xFFFF80AB), size: 21),
+          tooltip: 'Mediateka',
+          onPressed: _openMediaGallery,
+        ),
+        // 📅 Calendar Date Filter
+        IconButton(
+          icon: const Icon(Icons.calendar_month_rounded, color: Colors.white, size: 21),
           tooltip: 'Sanalar filtri',
           onPressed: _openDateFilter,
         ),
+        // 🔍 FTS Search
         IconButton(
-          icon: const Icon(Icons.search_rounded, color: Colors.white),
+          icon: const Icon(Icons.search_rounded, color: Colors.white, size: 21),
           tooltip: 'Qidirish',
           onPressed: _openSearch,
         ),
