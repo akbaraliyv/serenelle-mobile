@@ -65,15 +65,15 @@ jobs:
       - name: Create GitHub Release with APK
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.7
-          name: "Serenelle Direct v1.0.7 — Cinematic Archive Interface"
+          tag_name: v1.0.8
+          name: "Serenelle Direct v1.0.8 — Liquid Glass Interface"
           body: |
-            ## Version 1.0.7
+            ## Version 1.0.8
 
-            - Cinematic abstract entry portal and ambient interface.
-            - Neutral archive index with counts read from the local database.
-            - Search, date selection, media, and navigation actions grouped in one compact menu.
-            - Original message text and attachments are preserved.
+            - Viewport-aligned purple, magenta, and coral gradient flows through outgoing messages while scrolling.
+            - Incoming messages use a frosted obsidian surface with rim lighting and glass highlights.
+            - One-tap optical-aperture entrance animation replaces press-and-hold charging.
+            - Original messages and attachments are preserved.
 
             ### 📥 O'rnatish:
             Quyidagi `app-release.apk` faylini yuklab oling va telefoningizga o'rnating. Kelgusi barcha yangilanishlar ilova ichidan avtomatik amalga oshadi!

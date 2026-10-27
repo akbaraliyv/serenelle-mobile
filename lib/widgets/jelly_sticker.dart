@@ -43,17 +43,17 @@ class _JellyStickerState extends State<JellySticker>
 
   Color _getAuraColor(String text) {
     if (text.contains('🗿')) {
-      return const Color(0x3300F2FE); // Cyan stone glow
+      return const Color(0x338A9CBA);
     } else if (text.contains('❤️') || text.contains('🥰')) {
-      return const Color(0x38E91E63); // Ruby heart glow
+      return const Color(0x33C88C9C);
     } else if (text.contains('🔥')) {
-      return const Color(0x40FF5722); // Fire amber glow
+      return const Color(0x33C98265);
     } else if (text.contains('😂') || text.contains('🤣')) {
-      return const Color(0x33FFD700); // Golden laugh glow
+      return const Color(0x33D4B36E);
     } else if (text.contains('✅')) {
-      return const Color(0x3300E676); // Emerald check glow
+      return const Color(0x337FAE98);
     }
-    return const Color(0x22FFFFFF); // Clean ambient glow
+    return const Color(0x22B8A8E0);
   }
 
   @override

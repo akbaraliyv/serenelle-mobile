@@ -20,8 +20,7 @@ class _EnchantedOrbScreenState extends State<EnchantedOrbScreen>
 
   // Interactive Drag & Tilt
   Offset _orbOffset = Offset.zero;
-  bool _isCharging = false;
-  double _chargeProgress = 0.0;
+  bool _isOpening = false;
 
   // Stardust Particles inside the orb
   final List<_OrbParticle> _particles = [];
@@ -46,12 +45,12 @@ class _EnchantedOrbScreenState extends State<EnchantedOrbScreen>
     // 3. Supernova burst animation
     _burstController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 420),
     );
 
     _burstAnimation = CurvedAnimation(
       parent: _burstController,
-      curve: Curves.easeOutExpo,
+      curve: Curves.easeInOutCubic,
     );
 
     // Generate 75 cosmic particles
@@ -79,45 +78,10 @@ class _EnchantedOrbScreenState extends State<EnchantedOrbScreen>
     super.dispose();
   }
 
-  void _onChargeStart() {
-    setState(() {
-      _isCharging = true;
-    });
-    HapticFeedback.lightImpact();
-    _startChargingLoop();
-  }
-
-  void _startChargingLoop() async {
-    while (_isCharging && _chargeProgress < 1.0) {
-      await Future.delayed(const Duration(milliseconds: 25));
-      if (!mounted || !_isCharging) break;
-      setState(() {
-        _chargeProgress = math.min(1.0, _chargeProgress + 0.045);
-      });
-      if (_chargeProgress > 0.3 && _chargeProgress < 0.38) {
-        HapticFeedback.selectionClick();
-      } else if (_chargeProgress > 0.7 && _chargeProgress < 0.78) {
-        HapticFeedback.mediumImpact();
-      }
-    }
-
-    if (_chargeProgress >= 1.0) {
-      _triggerSupernova();
-    }
-  }
-
-  void _onChargeEnd() {
-    if (_chargeProgress < 1.0) {
-      setState(() {
-        _isCharging = false;
-        _chargeProgress = 0.0;
-        _orbOffset = Offset.zero;
-      });
-    }
-  }
-
   void _triggerSupernova() async {
-    HapticFeedback.heavyImpact();
+    if (_isOpening) return;
+    _isOpening = true;
+    HapticFeedback.mediumImpact();
     await _burstController.forward();
     if (!mounted) return;
 
@@ -129,9 +93,13 @@ class _EnchantedOrbScreenState extends State<EnchantedOrbScreen>
           transitionDuration: const Duration(milliseconds: 650),
           pageBuilder: (_, __, ___) => const ChatScreen(),
           transitionsBuilder: (_, animation, __, child) {
+            final eased = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
             return FadeTransition(
-              opacity: animation,
-              child: child,
+              opacity: eased,
+              child: ScaleTransition(
+                scale: Tween<double>(begin: 0.97, end: 1).animate(eased),
+                child: child,
+              ),
             );
           },
         ),
@@ -164,7 +132,7 @@ class _EnchantedOrbScreenState extends State<EnchantedOrbScreen>
             },
           ),
 
-          // 2. Central Interactive 3D Crystal Orb (Touch or Tap to Open)
+          // One tap opens the aperture; dragging only repositions the lens.
           Center(
             child: GestureDetector(
               onPanUpdate: (details) {
@@ -181,16 +149,7 @@ class _EnchantedOrbScreenState extends State<EnchantedOrbScreen>
                   _orbOffset = Offset.zero;
                 });
               },
-              onTapDown: (_) => _onChargeStart(),
-              onTapUp: (_) {
-                if (_chargeProgress < 0.25) {
-                  // Direct tap also triggers burst cleanly
-                  _triggerSupernova();
-                } else {
-                  _onChargeEnd();
-                }
-              },
-              onTapCancel: () => _onChargeEnd(),
+              onTap: _triggerSupernova,
               child: AnimatedBuilder(
                 animation: Listenable.merge([
                   _idleController,
@@ -208,7 +167,7 @@ class _EnchantedOrbScreenState extends State<EnchantedOrbScreen>
                           time: _idleController.value * 2 * math.pi,
                           pulse: _pulseController.value,
                           burst: _burstAnimation.value,
-                          charge: _chargeProgress,
+                          charge: 0,
                           particles: _particles,
                         ),
                       ),
@@ -229,7 +188,7 @@ class _EnchantedOrbScreenState extends State<EnchantedOrbScreen>
                   Container(width: 28, height: 1, color: const Color(0x668D829F)),
                   const SizedBox(height: 11),
                   const Text(
-                    'TOUCH TO ENTER',
+                    'TAP TO ENTER',
                     style: TextStyle(
                       color: Color(0xFF9B96A8),
                       fontSize: 9,

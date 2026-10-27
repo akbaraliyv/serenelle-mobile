@@ -1,3 +1,4 @@
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/chat_message.dart';
@@ -143,62 +144,127 @@ class ChatBubble extends StatelessWidget {
       bottomRight: Radius.circular(isMe ? 5 : 19),
     );
 
+    final glassSurface = ClipRRect(
+      borderRadius: bubbleRadius,
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: isMe
+                ? _ViewportLiquidGradient(radius: bubbleRadius)
+                : const ColoredBox(color: Color(0x8808090E)),
+          ),
+          if (!isMe)
+            Positioned.fill(
+              child: BackdropFilter(
+                filter: ui.ImageFilter.blur(sigmaX: 11, sigmaY: 11),
+                child: const ColoredBox(color: Color(0x440E0D15)),
+              ),
+            ),
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: isMe
+                      ? const [Color(0x2AFFFFFF), Color(0x080A0710), Color(0x24160B14)]
+                      : const [Color(0x22FFFFFF), Color(0x0DFFFFFF), Color(0x140A090F)],
+                  stops: const [0, 0.42, 1],
+                ),
+                border: Border.all(
+                  color: isMe ? const Color(0x99F6D8FF) : const Color(0x668F87A5),
+                  width: isMe ? 0.8 : 0.7,
+                ),
+                borderRadius: bubbleRadius,
+              ),
+            ),
+          ),
+          Positioned(
+            top: 0,
+            left: 15,
+            right: 15,
+            child: IgnorePointer(
+              child: Container(
+                height: 1,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: isMe
+                        ? const [Colors.transparent, Color(0xBFFFFFFF), Color(0x70F7B6D8), Colors.transparent]
+                        : const [Colors.transparent, Color(0x668F87A5), Color(0x33FFFFFF), Colors.transparent],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
     return Container(
       constraints: BoxConstraints(
         maxWidth: MediaQuery.of(context).size.width * 0.76,
       ),
       decoration: BoxDecoration(
         borderRadius: bubbleRadius,
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: isMe
-              ? const [Color(0x70A695D0), Color(0x608D7AA6), Color(0x70C89579)]
-              : const [Color(0xAAE7D9FF), Color(0x448878A8), Color(0x778D658A)],
-          stops: const [0, 0.52, 1],
+        color: Colors.transparent,
+        border: Border.all(
+          color: isMe ? const Color(0x99F6D8FF) : const Color(0x668F87A5),
+          width: isMe ? 0.8 : 0.7,
         ),
         boxShadow: [
           BoxShadow(
             color: isMe
-                ? const Color(0x557F2B9C)
-                : const Color(0x44000000),
-            blurRadius: isMe ? 18 : 14,
-            offset: const Offset(0, 5),
+                ? const Color(0x665A1C73)
+                : const Color(0x70000000),
+            blurRadius: isMe ? 22 : 18,
+            offset: const Offset(0, 7),
           ),
+          if (isMe)
+            const BoxShadow(
+              color: Color(0x33F036A8),
+              blurRadius: 15,
+              spreadRadius: -3,
+            )
+          else
+            const BoxShadow(
+              color: Color(0x225F5875),
+              blurRadius: 10,
+              spreadRadius: -4,
+            ),
         ],
       ),
       padding: const EdgeInsets.all(1),
-      child: Container(
-        decoration: BoxDecoration(
-          color: isMe ? const Color(0x30130D20) : const Color(0x7208080D),
-          borderRadius: bubbleRadius,
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: isMe
-                ? const [Color(0x2A381B42), Color(0x10200F2B)]
-                : const [Color(0x342D2938), Color(0x700A090F)],
-          ),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      child: ClipRRect(
+        borderRadius: bubbleRadius,
+        child: Stack(
           children: [
-            if (message.replyText != null) _buildReplyQuote(),
-            if (message.imageName != null) _buildPhotoAttachment(context),
-            if (message.audioName != null)
-              AudioPlayerBubble(audioName: message.audioName!, isMe: isMe),
-            if (message.text != null && message.text!.isNotEmpty)
-              SelectableText(
-                message.text!,
-                style: TextStyle(
-                  color: isMe ? Colors.white : const Color(0xFFF1EBF5),
-                  fontSize: 15,
-                  height: 1.35,
-                  fontWeight: FontWeight.w400,
-                  letterSpacing: -0.2,
-                ),
+            Positioned.fill(child: glassSurface),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (message.replyText != null) _buildReplyQuote(),
+                  if (message.imageName != null) _buildPhotoAttachment(context),
+                  if (message.audioName != null)
+                    AudioPlayerBubble(audioName: message.audioName!, isMe: isMe),
+                  if (message.text != null && message.text!.isNotEmpty)
+                    SelectableText(
+                      message.text!,
+                      style: TextStyle(
+                        color: isMe ? Colors.white : const Color(0xFFF1EBF5),
+                        fontSize: 15,
+                        height: 1.35,
+                        fontWeight: FontWeight.w400,
+                        letterSpacing: -0.2,
+                        shadows: isMe
+                            ? const [Shadow(color: Color(0x66420D41), blurRadius: 9)]
+                            : const [Shadow(color: Color(0x66000000), blurRadius: 7)],
+                      ),
+                    ),
+                ],
               ),
+            ),
           ],
         ),
       ),
@@ -294,6 +360,41 @@ class ChatBubble extends StatelessWidget {
               blurRadius: 6,
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Applies one viewport-aligned gradient to every outgoing bubble. As messages
+/// scroll through the screen, the purple/magenta/coral bands travel through them.
+class _ViewportLiquidGradient extends StatelessWidget {
+  final BorderRadius radius;
+  const _ViewportLiquidGradient({required this.radius});
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, _) => ClipRRect(
+        borderRadius: radius,
+        child: ShaderMask(
+          blendMode: BlendMode.srcIn,
+          shaderCallback: (bounds) {
+            final renderObject = context.findRenderObject();
+            final globalTop = renderObject is RenderBox && renderObject.hasSize
+                ? renderObject.localToGlobal(Offset.zero).dy
+                : 0.0;
+            final screenHeight = MediaQuery.sizeOf(context).height;
+            return const LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFF5C2EC6), Color(0xFFE10A9F), Color(0xFFFF7058)],
+              stops: [0, 0.52, 1],
+            ).createShader(
+              Rect.fromLTWH(0, -globalTop, bounds.width, screenHeight),
+            );
+          },
+          child: const ColoredBox(color: Colors.white),
         ),
       ),
     );
